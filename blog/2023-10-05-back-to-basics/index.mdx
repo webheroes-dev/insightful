@@ -1,0 +1,610 @@
+---
+slug: back-to-basics
+title: Back to (enhanced) basics
+authors: [krystian]
+tags: [javascript]
+---
+
+Nowadays, no matter which framework we're using or if any at all, no matter if we're using TypeScript or not,
+we're still writing JavaScript (kinda). There are many helpful features in recent ECMAScript versions that may
+significantly improve either code readability and our efficiency. Let's jump into them!
+
+<!--truncate-->
+
+## String interpolation
+
+One of the core and most useful language features.
+
+Consider adding a label containing some math:
+
+```js showLineNumbers
+const a = 1
+const b = 2
+
+const label = 'Sum of ' + a + ' and ' + b + ' is ' + a + b
+// 💣 Sum of 1 and 2 is 12
+```
+
+This fails simply because both `a` and `b` are considered strings since we're concatenating along with string values.
+
+We could fix it by wrapping math into braces:
+
+```js showLineNumbers
+const label = 'Sum of ' + a + ' and ' + b + ' is ' + (a + b)
+// 👌 Sum of 1 and 2 is 3
+```
+
+It works, so it's great, we can move on.
+
+But is there a better way?
+
+There is! And the answer is _string interpolation_. The above working solution could be simply replaced with a much more readable expression:
+
+```js showLineNumbers
+const label = `Sum of ${a} and ${b} is ${a + b}`
+// ✨ Sum of 1 and 2 is 3
+```
+
+## Ternary operator
+
+Also called conditional operator. Its purpose is to simplify some `if`-statement-based code allowing us to achieve the same in single expression.
+
+Let's define a goal for an exercise: to check if value was provided or not, applying fancy label.
+
+```js showLineNumbers
+function describe(value) {
+  if (!!value) {
+    return 'Value provided'
+  } else {
+    return 'Busted! There is missing value'
+  }
+}
+
+describe('something') // Value provided
+describe() // ✨ Busted! There is missing value
+```
+
+It would be more complicated though when we would need to conditionally assign a value to a variable.
+
+So how to get the label inline?
+
+```js showLineNumbers
+function describe(value) {
+  // highlight-next-line
+  const label = !!value ? 'present' : 'missing'
+  return `Value is ${label}`
+}
+
+describe() // Value is missing
+describe('something') // Value is present
+```
+
+## Equality check - strict vs weak
+
+:::info
+
+That's quite important thing as it can reverse your code logic in some (if not most) cases.
+
+:::
+
+There are 2 ways to check equality of things strict and weak one.
+
+Weak comparison used to be a subject of JS memes.
+
+![JS non-intuitive double equals comparison](/img/js-eqeq-meme.png)
+
+In short, it doesn't compare types and is discouraged most of the time.
+We will use helper function to see how it behaves in different scenarios (including one that proves weak comparison to be useful, stay tuned!).
+
+```js showLineNumbers
+function checkEquality(source, testValue) {
+  const weakResult = source == testValue
+  const strictResult = source === testValue
+
+  return `
+    ${source} == ${testValue} is ${weakResult}
+    ${weakResult === strictResult ? 'and' : ', but'}
+    ${source} === ${testValue} is ${strictResult}
+  `
+}
+```
+
+Starting with obvious one:
+
+```js showLineNumbers
+checkEquality('a', 'b')
+// "a" == "b" is false and "a" === "b" is false
+```
+
+Nothing shocking yet, let's continue:
+
+```js showLineNumbers
+checkEquality([], 0)
+// [] == 0 is true , but [] === 0 is false
+```
+
+Ok, let's make a pause. `[]` is an empty array, but we wouldn't expect it to be equal to `0`, would we?
+
+That's why weak comparison is discouraged. In fact, JS converts the values first in the case.
+
+Think of the example as of array that has `0` elements and simple `0` numeric value.
+The result would be the same for blank string, even containing a white spaces:
+
+```js showLineNumbers
+checkEquality(' ', 0)
+// " " == 0 is true , but " " === 0 is false
+```
+
+Ok, so I think we can agree now that, by default, we should use strict comparison (`===`).
+
+There's a useful case though - nullish values
+
+:::note
+
+_Nullish_ value can be either `null` or `undefined`
+
+:::
+
+Sometimes we don't mind if something is `null` or `undefined` as long as it's not
+e.g. an array, so we can push some elements into it, but only once it's defined.
+
+With strict comparison we would be enforced to do similar things twice:
+
+```js showLineNumbers
+function getArray(value) {
+  // highlight-next-line
+  if (value === null || value === undefined) {
+    return []
+  } else {
+    return value
+  }
+}
+```
+
+This can be simplified though, thanks to weak comparison against nullish value:
+
+```js showLineNumbers
+function getArray(value) {
+  // highlight-next-line
+  if (value == null) {
+    return []
+  } else {
+    return value
+  }
+}
+
+
+getArray() // []
+getArray(["there's something!"]) // ["there's something!"]
+```
+
+## Destructuring assignment
+
+Have you ever faced a problem to get some properties of an object, ignoring the rest?
+You surely have (or will soon 😉). We need to do so when doing various sorts of data mapping, usually related to network calls.
+
+Imagine a config object that contains a bunch of properties like:
+
+export const config = {
+  appName: 'The App',
+  env: 'DEV',
+  api: 'https://example.whapp.dev/api/v2',
+  oidc: {
+  // ...
+  },
+}
+
+```js
+const config = {
+  appName: 'The App',
+  env: 'DEV',
+  api: 'https://example.whapp.dev/api/v2',
+  oidc: {
+    // ...
+  },
+}
+```
+
+We were told to create application header including the name and environment.
+
+Of course, we could make it using property access:
+
+```js showLineNumbers
+  const label = `${config.appName} (${config.env})`
+  // The App (DEV)
+```
+
+but destructed shape might be easier to use and more readable though:
+
+```js showLineNumbers
+  // highlight-next-line
+  const { appName, env } = config
+  const label = `${appName} (${env})`
+  // The App (DEV)
+```
+
+## Spread operator
+
+### Array-like
+
+Consider having two collections - for simplicity, arrays of numbers.
+
+export const arr1 = [1, 2, 3]
+export const arr2 = [7, 20]
+
+How could we e.g. merge those into single one? First thought - with loops, obviously!
+Let's give a try.
+
+```js showLineNumbers
+function merge(a, b) {
+  // highlight-start
+  const result = []
+  a.forEach((element) => {
+    result.push(element)
+  })
+  // and here we go again 😩
+  b.forEach((element) => {
+    result.push(element)
+  })
+  // highlight-end
+
+  return result
+}
+
+const arr1 = [1, 2, 3]
+const arr2 = [7, 20]
+merge(arr1, arr2) // [1, 2, 3, 7, 20]
+```
+
+Cool, it works. Though spread operator (`...`) is there to make this much simpler:
+
+```js showLineNumbers
+function merge(a, b) {
+  // highlight-next-line
+  const result = [...a, ...b] // ✨ that's neat, isn't it?
+  return result
+}
+
+const arr1 = [1, 2, 3]
+const arr2 = [7, 20]
+merge(arr1, arr2) // [1, 2, 3, 7, 20]
+```
+
+It _spreads_ all the elements in place.
+
+### Object properties
+
+Hold on, that's not the end of the story yet - we can spread object properties as well.
+
+Imagine a shape:
+
+```js
+const source = {
+  id: '1234abcd',
+  name: 'Here we are!',
+  metadata: {
+    something: 'irrelevant',
+  },
+}
+```
+
+export const source = {
+  id: '1234abcd',
+  name: 'Here we are!',
+  metadata: {
+    something: 'irrelevant',
+  },
+}
+
+How to get all the properties of an object but a few?
+Till the object is not huge it would be pretty much straightforward to get what we need with explicit mapping.
+
+```js showLineNumbers
+const source = {
+  id: '1234abcd',
+  name: 'Here we are!',
+  metadata: {
+    something: 'irrelevant',
+  },
+}
+
+const allButMetadata = {
+  // highlight-start
+  id: source.id,
+  name: source.name
+  // highlight-end
+}
+```
+
+But how the code would look like if there were tens of properties? It would be enormous spaghetti!
+
+Here _spread operator (...)_ comes in handy once again:
+
+
+```js showLineNumbers
+const {
+  metadata,
+  // highlight-next-line
+  ...allButMetadata
+} = source
+```
+
+## Nullish coalescing operator
+
+One of common cases with handling data is that something is missing, and we want to apply a default value.
+
+JS got nice thing a while ago to handle that - we can just use `someValue ?? defaultValue` expression.
+
+```js showLineNumbers
+function describe(value) {
+  // highlight-next-line
+  return value ?? 'I am not null anymore! 💪'
+}
+
+// highlight-next-line
+describe(null) // I am not null anymore! 💪
+describe('Such a thing') // Such a thing
+```
+
+:::note
+
+In fact there's also logical OR operator `||` of which special case is the nullish coalescing one.
+
+The difference is that logical OR will evaluate to the default value for any falsy value, including empty strings and...`0` number.
+That may be handy in some cases, though in mostly we need to ensure that value is not nullish.
+
+```js showLineNumbers
+function describe(value) {
+  // highlight-next-line
+  return value || 'I was blank'
+}
+
+// highlight-next-line
+describe('') // I was blank
+describe('Such a thing') // Such a thing
+```
+
+:::
+
+## Nullish coalescing assignment
+
+Pretty similar to [nullish coalescing operator](#nullish-coalescing-operator) in its behavior but with slightly different purpose.
+It helps in property/variable initialization when it's nullish to not be anymore.
+
+```js showLineNumbers
+function fulfill(source) {
+  // highlight-next-line
+  source.js ??= 'rocks! 🪨'
+
+  return source
+}
+
+fulfill({
+  js: 'is nice'
+})
+/* {
+  js: 'is nice'
+} */
+
+fulfill({
+  thing: 'still here'
+})
+/* {
+  thing: 'still here',
+// highlight-next-line
+  js: 'rocks! 🪨'
+} */
+```
+
+## Lazy property assignment
+
+Sometimes we need to assign a property to an object only at particular circumstances
+while having `undefined` or `null` as a value is not an option. We can take [spread operator](#spread-operator) into account:
+
+```js showLineNumbers
+// styles.js
+const styles = {
+  box: {
+    border: '1px solid #000'
+  }
+}
+// index.js
+const elementStyle = {
+  ...styles.box, // ✓ `box` was defined as an object
+  ...styles.card, // 💣 crashes, there's no `card` property at `styles`
+}
+```
+
+So it doesn't work just like that. What else can we do? Extra [ternary operator](#ternary-operator) is a common way.
+
+```js showLineNumbers
+const elementStyle = {
+  ...styles.box, // ✓ `box` was defined as an object
+// highlight-start
+  ...(styles.card ? styles.card : {}),
+  // 💪 doesn't crash anymore, even if there's no `card` property at `styles`
+// highlight-end
+}
+
+/* {
+  border: '1px solid #000'
+} */
+```
+
+In fact, spread operator can take boolish values as well. Let's try this out:
+
+```js showLineNumbers
+const elementStyle = {
+  ...styles.box, // ✓ `box` was defined as an object
+// highlight-start
+  ...(styles.card && styles.card),
+  // 👌 doesn't crash anymore, even if there's no `card` property at `styles`
+// highlight-end
+}
+
+/* {
+  border: '1px solid #000'
+} */
+```
+
+Cool, it's nice but there's a catch. Value wouldn't be assigned when falsy...
+
+```js showLineNumbers
+const disabled = false
+const things = {
+  here: 'we go'
+}
+
+const result = {
+  ...things,
+  // highlight-next-line
+  ...(disabled && {disabled}) // 💣 `disabled` won't be assigned
+}
+/* {
+  here: 'we go'
+} */
+```
+
+Here's a thing - nothing stops us to compare the value with `undefined` (or anything else):
+
+
+
+```js showLineNumbers
+const disabled = false
+const things = {
+  here: 'we go'
+}
+
+const result = {
+  ...things,
+  // highlight-next-line
+  ...(disabled !== undefined && {disabled}) // ✨ `disabled` will be assigned
+}
+/* {
+  here: 'we go',
+  disabled: false
+} */
+```
+
+:::tip Did you know?
+
+Within an object, there's a difference between property that has `undefined` value and a property that was not defined.
+
+```js showLineNumbers
+const someCollection = [1, 2, 3]
+const source = {
+  // highlight-start
+  foo: someCollection[4]
+  /*
+     `someCollection[4]` evaluates to `undefined` since
+     `someCollection` has only 3 elements
+  */
+  // highlight-end
+}
+
+// highlight-start
+source.foo // undefined
+source.bar // undefined
+// highlight-end
+```
+
+Wait, I just said that these are different, right? Ok then...
+
+```js showLineNumbers
+Object.hasOwn(source, 'foo')
+// true, we've defined `foo` to be `undefined`
+
+// highlight-start
+Object.hasOwn(source, 'bar')
+// false, there's no `bar` property in source
+// highlight-end
+```
+
+:::
+
+## Optional chaining
+
+I think we can agree with that we're dealing with nullish values pretty often.
+Usually we're trying to access a property on an object that doesn't really exist.
+
+In case we're reaching top level property that may not be a nightmare to make simple if statement and exit early.
+But things used to be much more complicated than that.
+
+Let's say we have blob storage of documents in cloud and many persons has access to edit it while the first one is initial creator.
+We want to display somewhere information about the second contributor.
+
+In ideal world everything is easy, and we'd have accessor like this one:
+
+```js showLineNumbers
+const contributorName = file.metadata.contributors[1].fullName
+//      💣 TypeError: undefined is not an object ☝️
+```
+
+Unfortunately we don't have later contributors returned separately, rather than there's collection of all of them.
+
+We've got a requirement from Product Owner to display `-` in case there's only one contributor.
+
+```js showLineNumbers
+const contributorName = file.metadata.contributors[1]?.fullName ?? '-'
+//       ✨ One character that makes the difference ☝️
+```
+
+It's pretty neat when using along with [nullish coalescing operator](#nullish-coalescing-operator)
+
+## `in` operator
+
+Sometimes we need to check if there's particular property in an object.
+
+Assume we're dealing with an object that has either `stringValue` or `numberValue`, never both.
+What's worse, these values could be `undefined` or `null`.
+
+How to tell which case we're dealing with?
+
+By checking if such object has particular property:
+
+```js showLineNumbers
+const source = {
+  numberValue: undefined
+}
+// highlight-next-line
+if (`stringValue` in source) {
+  /* `source.stringValue` is there,
+      but we don't know/mind if it's non-blank string or nullish value
+   */
+} else {
+  /* `source.stringValue` isn't there,
+      so we may assume we need to use `source.numberValue`
+   */
+}
+```
+
+## Comma expression
+
+Last but not least. It's rarely used in repositories though likely it could be present at local code, not pushed yet.
+
+Comma expressions does everything from left to right but returns only last part.
+
+It's like CSV would return last column.
+
+```js showLineNumbers
+let x = 1;
+
+/*        these are executed but not assigned to `y`
+            👇 👇         */
+const y = (++x, x++, ++x);
+/*                    ☝️
+*             `y` will be 4
+*/
+```
+
+That probably wasn't best use case but keeping how it behaves in mind, you could debug things easily inline:
+
+```js showLineNumbers title="spaghetti-code.js"
+- (value) => mutateValue(value, globalThing)
++ (value) => mutateValue(
+  // highlight-start
++   (console.debug('[DEBUG] The Value:', value),
++   (console.debug('[DEBUG] Global thing:', globalThing)
+  // highlight-end
++ ) // ✨ Logs both `value` and `globalThing`, separately
+```
