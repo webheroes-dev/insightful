@@ -7,13 +7,13 @@ tags: [javascript]
 
 Nowadays, no matter which framework we're using or if any at all, no matter if we're using TypeScript or not,
 we're still writing JavaScript (kinda). There are many helpful features in recent ECMAScript versions that may
-significantly improve either code readability and our efficiency. Let's jump into them!
+significantly improve both code readability and our efficiency. Let's jump into them!
 
 <!--truncate-->
 
 ## String interpolation
 
-One of the core and most useful language features.
+**one of the core and most useful language features**
 
 Consider adding a label containing some math:
 
@@ -27,7 +27,7 @@ const label = 'Sum of ' + a + ' and ' + b + ' is ' + a + b
 
 This fails simply because both `a` and `b` are considered strings since we're concatenating along with string values.
 
-We could fix it by wrapping math into braces:
+We could fix it by wrapping math into parentheses:
 
 ```js showLineNumbers
 const label = 'Sum of ' + a + ' and ' + b + ' is ' + (a + b)
@@ -47,9 +47,9 @@ const label = `Sum of ${a} and ${b} is ${a + b}`
 
 ## Ternary operator
 
-Also called conditional operator. Its purpose is to simplify some `if`-statement-based code allowing us to achieve the same in single expression.
+Also called conditional operator. Its purpose is to simplify some `if`-statement-based code allowing us to achieve the same in a single expression.
 
-Let's define a goal for an exercise: to check if value was provided or not, applying fancy label.
+Let's define a goal for the exercise: to check if a value has been provided or not, applying a fancy label.
 
 ```js showLineNumbers
 function describe(value) {
@@ -83,18 +83,18 @@ describe('something') // Value is present
 
 :::info
 
-That's quite important thing as it can reverse your code logic in some (if not most) cases.
+That's a quite important thing as it can reverse your code logic in some (if not most) cases.
 
 :::
 
-There are 2 ways to check equality of things strict and weak one.
+There are two ways of checking equality of things: a strict and a weak one.
 
 Weak comparison used to be a subject of JS memes.
 
 ![JS non-intuitive double equals comparison](/img/js-eqeq-meme.png)
 
 In short, it doesn't compare types and is discouraged most of the time.
-We will use helper function to see how it behaves in different scenarios (including one that proves weak comparison to be useful, stay tuned!).
+We will create a helper function to see how it behaves in different scenarios (including one that proves weak comparison to be useful, stay tuned!).
 
 ```js showLineNumbers
 function checkEquality(source, testValue) {
@@ -109,7 +109,7 @@ function checkEquality(source, testValue) {
 }
 ```
 
-Starting with obvious one:
+Starting with the obvious one:
 
 ```js showLineNumbers
 checkEquality('a', 'b')
@@ -125,10 +125,10 @@ checkEquality([], 0)
 
 Ok, let's make a pause. `[]` is an empty array, but we wouldn't expect it to be equal to `0`, would we?
 
-That's why weak comparison is discouraged. In fact, JS converts the values first in the case.
+That's why weak comparison is discouraged. In fact, JS converts the values first in this case.
 
-Think of the example as of array that has `0` elements and simple `0` numeric value.
-The result would be the same for blank string, even containing a white spaces:
+Think of the example as of an array that has `0` elements and simple `0` numeric value.
+The result would be the same for a blank string, even containing white spaces:
 
 ```js showLineNumbers
 checkEquality(' ', 0)
@@ -161,7 +161,7 @@ function getArray(value) {
 }
 ```
 
-This can be simplified though, thanks to weak comparison against nullish value:
+This can be simplified though, thanks to weak comparison against nullish values:
 
 ```js showLineNumbers
 function getArray(value) {
@@ -180,7 +180,7 @@ getArray(["there's something!"]) // ["there's something!"]
 
 ## Destructuring assignment
 
-Have you ever faced a problem to get some properties of an object, ignoring the rest?
+Have you ever found this challenging to get some properties of an object, while ignoring the rest?
 You surely have (or will soon 😉). We need to do so when doing various sorts of data mapping, usually related to network calls.
 
 Imagine a config object that contains a bunch of properties like:
@@ -205,7 +205,7 @@ const config = {
 }
 ```
 
-We were told to create application header including the name and environment.
+We were told to create an application header including the name and environment.
 
 Of course, we could make it using property access:
 
@@ -214,7 +214,7 @@ Of course, we could make it using property access:
   // The App (DEV)
 ```
 
-but destructed shape might be easier to use and more readable though:
+However, a destructed shape might be easier to use and more readable:
 
 ```js showLineNumbers
   // highlight-next-line
@@ -233,7 +233,7 @@ export const arr1 = [1, 2, 3]
 export const arr2 = [7, 20]
 
 How could we e.g. merge those into single one? First thought - with loops, obviously!
-Let's give a try.
+Let's give it a try.
 
 ```js showLineNumbers
 function merge(a, b) {
@@ -296,7 +296,7 @@ export const source = {
   },
 }
 
-How to get all the properties of an object but a few?
+How to get most of the properties of an object but omit a few?
 Till the object is not huge it would be pretty much straightforward to get what we need with explicit mapping.
 
 ```js showLineNumbers
@@ -316,7 +316,7 @@ const allButMetadata = {
 }
 ```
 
-But how the code would look like if there were tens of properties? It would be enormous spaghetti!
+But how the code would look like if there were dozens of properties? It would be enormous spaghetti!
 
 Here _spread operator (...)_ comes in handy once again:
 
@@ -331,9 +331,9 @@ const {
 
 ## Nullish coalescing operator
 
-One of common cases with handling data is that something is missing, and we want to apply a default value.
+One of the common challenges with handling data is that something is missing, and we want to apply a default value.
 
-JS got nice thing a while ago to handle that - we can just use `someValue ?? defaultValue` expression.
+JS got a nice thing a while ago to handle that - we can just use `someValue ?? defaultValue` expression.
 
 ```js showLineNumbers
 function describe(value) {
@@ -351,7 +351,7 @@ describe('Such a thing') // Such a thing
 In fact there's also logical OR operator `||` of which special case is the nullish coalescing one.
 
 The difference is that logical OR will evaluate to the default value for any falsy value, including empty strings and...`0` number.
-That may be handy in some cases, though in mostly we need to ensure that value is not nullish.
+That may be handy in some cases, though mostly we need to ensure that the value is not nullish.
 
 ```js showLineNumbers
 function describe(value) {
@@ -368,8 +368,8 @@ describe('Such a thing') // Such a thing
 
 ## Nullish coalescing assignment
 
-Pretty similar to [nullish coalescing operator](#nullish-coalescing-operator) in its behavior but with slightly different purpose.
-It helps in property/variable initialization when it's nullish to not be anymore.
+Pretty similar to [nullish coalescing operator](#nullish-coalescing-operator) in its behavior but with a slightly different purpose.
+It helps in property/variable initialization when it's nullish, to stop being so.
 
 ```js showLineNumbers
 function fulfill(source) {
@@ -398,8 +398,8 @@ fulfill({
 
 ## Lazy property assignment
 
-Sometimes we need to assign a property to an object only at particular circumstances
-while having `undefined` or `null` as a value is not an option. We can take [spread operator](#spread-operator) into account:
+Sometimes we need to assign a property to an object only in particular circumstances
+while having `undefined` or `null` as a value is not an option. We can consider using [the spread operator](#spread-operator):
 
 ```js showLineNumbers
 // styles.js
@@ -415,7 +415,7 @@ const elementStyle = {
 }
 ```
 
-So it doesn't work just like that. What else can we do? Extra [ternary operator](#ternary-operator) is a common way.
+So it doesn't work just like that. What else can we do? Using extra [ternary operator](#ternary-operator) is a common way to handle such issues.
 
 ```js showLineNumbers
 const elementStyle = {
@@ -466,8 +466,6 @@ const result = {
 ```
 
 Here's a thing - nothing stops us to compare the value with `undefined` (or anything else):
-
-
 
 ```js showLineNumbers
 const disabled = false
@@ -524,43 +522,44 @@ Object.hasOwn(source, 'bar')
 
 ## Optional chaining
 
-I think we can agree with that we're dealing with nullish values pretty often.
+I think we can agree that we're dealing with nullish values pretty often.
 Usually we're trying to access a property on an object that doesn't really exist.
 
-In case we're reaching top level property that may not be a nightmare to make simple if statement and exit early.
+Sometimes we're reaching top level property to test against nullish values.
+In such cases we could just write a simple if-statement and exit early.
 But things used to be much more complicated than that.
 
-Let's say we have blob storage of documents in cloud and many persons has access to edit it while the first one is initial creator.
-We want to display somewhere information about the second contributor.
+Let's say we have a blob storage of documents in the cloud and many users have access to edit it while the first user is the initial creator.
+We want to display information about the second contributor somewhere.
 
-In ideal world everything is easy, and we'd have accessor like this one:
+In the ideal world everything would be easy, and we'd have an accessor like this one:
 
 ```js showLineNumbers
 const contributorName = file.metadata.contributors[1].fullName
 //      💣 TypeError: undefined is not an object ☝️
 ```
 
-Unfortunately we don't have later contributors returned separately, rather than there's collection of all of them.
+Unfortunately, following contributors are not returned separately, but in a joint collection.
 
-We've got a requirement from Product Owner to display `-` in case there's only one contributor.
+We've got a requirement from the Product Owner to display `-` in case there's only one contributor.
 
 ```js showLineNumbers
 const contributorName = file.metadata.contributors[1]?.fullName ?? '-'
 //       ✨ One character that makes the difference ☝️
 ```
 
-It's pretty neat when using along with [nullish coalescing operator](#nullish-coalescing-operator)
+It's pretty neat when used along with [nullish coalescing operator](#nullish-coalescing-operator)
 
 ## `in` operator
 
-Sometimes we need to check if there's particular property in an object.
+Sometimes we need to check if there's a particular property in an object.
 
 Assume we're dealing with an object that has either `stringValue` or `numberValue`, never both.
 What's worse, these values could be `undefined` or `null`.
 
 How to tell which case we're dealing with?
 
-By checking if such object has particular property:
+By checking if such object has a particular property:
 
 ```js showLineNumbers
 const source = {
@@ -580,11 +579,12 @@ if (`stringValue` in source) {
 
 ## Comma expression
 
-Last but not least. It's rarely used in repositories though likely it could be present at local code, not pushed yet.
+Last but not least.
+It's rarely used in repositories, although it could be present in local code that has not been pushed yet.
 
-Comma expressions does everything from left to right but returns only last part.
+Comma expressions does everything from left to right but returns only the last part.
 
-It's like CSV would return last column.
+It's like in a CSV file we would return the last column.
 
 ```js showLineNumbers
 let x = 1;
@@ -597,7 +597,7 @@ const y = (++x, x++, ++x);
 */
 ```
 
-That probably wasn't best use case but keeping how it behaves in mind, you could debug things easily inline:
+That probably wasn't the best use case, but keeping in mind how it behaves, you could easily debug things inline:
 
 ```js showLineNumbers title="spaghetti-code.js"
 - (value) => mutateValue(value, globalThing)
