@@ -51,6 +51,13 @@ const config = {
           // path: 'articles',
           routeBasePath: '/articles',
           blogTitle: 'Articles',
+          blogDescription: 'Articles',
+          blogSidebarTitle: 'Recent articles',
+
+          feedOptions: {
+            description: `${name} Articles`
+          },
+
 
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
