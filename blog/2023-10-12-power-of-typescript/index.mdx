@@ -1,6 +1,6 @@
 ---
 slug: power-of-typescript
-title: Power of TypeScript
+title: Boost your type safety
 authors: [krystian, barbie]
 tags: [typescript]
 draft: true
@@ -12,77 +12,61 @@ It's draft yet
 
 <!--truncate-->
 
-## What's TypeScript?
+:::tip Remember
 
-- strongly typed programming language
-- brings type safety to JS world
-- works at build time - all types are removed once code is compiled into JS
+- TypeScript works at build time only
+- types are removed when code is compiled to JS
 
-## A few ways to say the shape
+:::
 
-### Type declaration
+## Narrow literals
 
-- with use of colons
+- cast `as const` or union of literals
+- when value can be only one of a well known values
+
 ```ts showLineNumbers
-const label: string = 'Here we go'
 ```
-- return type of functions
+
+## Discriminated union
+
+- usefull to let TS infer function conditional return type
+
+for example below:
+- status is either `'ok'` or `'error'`
+- if ok, `data` is list of strings
+- in case of error, `data` is `null` and has `error` message
+
+before
+
 ```ts showLineNumbers
-function sum(a: number, b: number): number {
-    return a + b
+type Result = {
+    // highlight-start
+    status: 'ok'
+    data: string[]
+    // highlight-end
+} | {
+    // highlight-start
+    status: 'error'
+    data: null
+    error: string
+    // highlight-end
+}
+
+function do(): Result {
+  // ...
+}
+
+const result = do()
+
+if (result.status === 'ok') {
+
 }
 ```
-- `satisfies` operator
-  - starting from TS 4.9
-  - doesn't change type but ensures the value _satisfies_ the type
 
-### Type inference
+could be also
 
-- TS can infer what's the shape of variable
-    ```ts showLineNumbers
-    const label = 'Here we go again'
-    // ✨  ☝️string
-    ```
-- TS can infer return type of a function
-    ```ts showLineNumbers
-    function measure(thing: string) {
-        return thing.length // ✨ number
-    }
-    ```
-
-### Define the type
-
-- `interface`
-    ```ts showLineNumbers
-    interface Thing {
-        label: string
-        value: unknown
-    }
-    ```
-- `type`
-    ```ts showLineNumbers
-    type Thing = {
-        label: string
-        value: unknown
-    }
-    ```
-    - regards official docs, could be slower than `interface`
-    - can describe `union` of types
-    ```ts showLineNumbers
-    type Value = string | number
-    ```
-
-## Easy way for self-defeat
-
-- `any` usually makes TS useless - TS becomes JS since value can be `any`thing
-- better to use `unknown` which doesn't allow to treat value as anything (need to ensure the type first)
-
-## Final notes/recommendations
-
-- personally
-  - variables: let TS infer primitives
-  - variables: use `satisfies` if possible or declare object-like
-  - function return type: let TS infer by default
-    - rarely declare return type when complex constraints are required
-  - when appropriate, cast `as const` to narrow the type, usually just string literals
-- don't use `any` till really necessary (prefer `unknown`)
+```ts showLineNumbers
+type Result = {
+    status: 
+}
+```
