@@ -14,31 +14,75 @@ It's draft yet
 
 ## What's TypeScript?
 
-- [ ] strongly typed programming language
-- [ ] brings type safety to JS world
-- [ ] works at build time - all types are removed once code is compiled into JS
+- strongly typed programming language
+- brings type safety to JS world
+- works at build time - all types are removed once code is compiled into JS
 
 ## A few ways to say the shape
 
 ### Type declaration
 
-- [ ] with use of colons
+- with use of colons
 ```ts showLineNumbers
 const label: string = 'Here we go'
 ```
-- [ ] return type of functions
+- return type of functions
 ```ts showLineNumbers
 function sum(a: number, b: number): number {
     return a + b
 }
 ```
+- `satisfies` operator
+  - starting from TS 4.9
+  - doesn't change type but ensures the value _satisfies_ the type
 
 ### Type inference
 
-- [ ] TS can infer what's the shape of variable
-- [ ]
+- TS can infer what's the shape of variable
+    ```ts showLineNumbers
+    const label = 'Here we go again'
+    // ✨  ☝️string
+    ```
+- TS can infer return type of a function
+    ```ts showLineNumbers
+    function measure(thing: string) {
+        return thing.length // ✨ number
+    }
+    ```
 
-```ts showLineNumbers
-const label = 'Here we go again'
-// ✨  ☝️string
-```
+### Define the type
+
+- `interface`
+    ```ts showLineNumbers
+    interface Thing {
+        label: string
+        value: unknown
+    }
+    ```
+- `type`
+    ```ts showLineNumbers
+    type Thing = {
+        label: string
+        value: unknown
+    }
+    ```
+    - regards official docs, could be slower than `interface`
+    - can describe `union` of types
+    ```ts showLineNumbers
+    type Value = string | number
+    ```
+
+## Easy way for self-defeat
+
+- `any` usually makes TS useless - TS becomes JS since value can be `any`thing
+- better to use `unknown` which doesn't allow to treat value as anything (need to ensure the type first)
+
+## Final notes/recommendations
+
+- personally
+  - variables: let TS infer primitives
+  - variables: use `satisfies` if possible or declare object-like
+  - function return type: let TS infer by default
+    - rarely declare return type when complex constraints are required
+  - when appropriate, cast `as const` to narrow the type, usually just string literals
+- don't use `any` till really necessary (prefer `unknown`)
