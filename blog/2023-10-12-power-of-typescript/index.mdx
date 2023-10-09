@@ -1,14 +1,13 @@
 ---
-slug: power-of-typescript
-title: Boost your type safety
+slug: boost-your-type-safety
+title: Boost your type-safety
 authors: [krystian, barbie]
 tags: [typescript]
 draft: true
 ---
 
-Here we go (with description)
-
-It's draft yet
+- TypeScript itself introduces some safety to codebase
+- we can help TS make it safer
 
 <!--truncate-->
 
@@ -27,27 +26,6 @@ for example below:
 - in case of an error, `data` is `null` and `error` is a message
 
 :::
-
-## Generic types
-
-- useful when we don't mind about what's the shape of function argument
-
-```ts showLineNumbers
-// highlight-next-line
-function map<Input>(input: Input) {
-
-    return {
-        data: input
-    }
-}
-
-// highlight-start
-map('this') // ✨ { data: string }
-map([0, 1, 10]) // ✨ { data: number[] }
-// highlight-end
-```
-
-- generics are much more powerful than that
 
 ## Narrow literals
 
@@ -234,9 +212,51 @@ if (response.status === 'ok') {
 }
 ```
 
-## return type
+## Generic types
+
+- useful when we don't mind about what's the shape of function argument
+
+```ts showLineNumbers
+// highlight-next-line
+function map<Input>(input: Input) {
+
+    return {
+        data: input
+    }
+}
+
+// highlight-start
+map('this') // ✨ { data: string }
+map([0, 1, 10]) // ✨ { data: number[] }
+// highlight-end
+```
+
+- generics are much more powerful than that
+
+## Return type
 
 when inferring return type dynamically and need to use the shape somewhere else use `ReturnType` utility type
+
+:::tip Did you know?
+
+in types context, `typeof` operator will infer shape of something already defined
+
+```ts showLineNumbers
+const label = 'here we go'
+type Label = typeof label // ✨ string
+
+const response = {
+    status: 'ok' as const,
+    data: ['here we go again']
+}
+type Response = typeof response
+/* ✨ {
+    status: 'ok'
+    data: string[]
+} */
+```
+
+:::
 
 ```ts showLineNumbers
 type Response = ReturnType<typeof makeTheCall>
@@ -251,15 +271,3 @@ type Response = ReturnType<typeof makeTheCall>
 } */
 // highlight-end
 ```
-
-:::tip Did you know?
-
-`typeof` operator can be used for types as well inferring shape of something already defined
-
-:::
-
-## Self-defeat with `any`
-
-DRAFT
-- prefer `unknown`
-- `never`?
