@@ -19,27 +19,118 @@ It's draft yet
 
 :::
 
-## Narrow literals
-
-- cast `as const` or union of literals
-- when value can be only one of a well known values
-
-```ts showLineNumbers
-```
-
-## Discriminated union
-
-- usefull to let TS infer function conditional return type
+:::note
 
 for example below:
 - status is either `'ok'` or `'error'`
-- if ok, `data` is list of strings
-- in case of error, `data` is `null` and has `error` message
+- if ok, `data` is a list of strings
+- in case of an error, `data` is `null` and `error` is a message
 
-before
+:::
+
+## Generic types
+
+- useful when we don't mind about what's the shape of function argument
 
 ```ts showLineNumbers
-type Result = {
+// highlight-next-line
+function map<Input>(input: Input) {
+
+    return {
+        data: input
+    }
+}
+
+// highlight-start
+map('this') // ✨ { data: string }
+map([0, 1, 10]) // ✨ { data: number[] }
+// highlight-end
+```
+
+- generics are much more powerful than that
+
+## Narrow literals
+
+given:
+
+```ts showLineNumbers
+const result = {
+    status: 'ok', // string
+    data: ['here we go'] // string[]
+}
+```
+
+looks fine...probably
+
+```ts showLineNumbers
+if (result.status === 'error') {
+    // 💣 Boom! `status` was 'ok',
+    // the condition doesn't make sense but will pass compilation
+}
+```
+
+- use `as const` cast to define literal
+
+```ts showLineNumbers
+const saferResult = {
+    // highlight-next-line
+    status: 'ok' as const, // ✨ 'ok'
+    data: ['here we go again'] // string[]
+}
+// highlight-start
+if (saferResult.status === 'error') {
+    // ✨ TS will complain since 'error' could not be 'ok',
+    // compilation fails, we are safe
+}
+// highlight-end
+```
+
+- useful when value can be only one of a well known values
+
+## Union types
+
+- status above could be defined as (depends on)
+
+```ts showLineNumbers
+type Status = 'ok' | 'error'
+```
+
+- we can create unions of any shape
+
+```ts showLineNumbers
+type Entity = {
+    id: string
+    name: string
+    email: string
+} | {
+    id: number
+    name: string
+    phoneNumber: string
+}
+
+/*
+type Entity = {
+// highlight-next-line
+    id: string | number
+    name: string
+}
+*/
+}
+```
+
+- in the example `email` neither `phoneNumber` are in both so are removed when using union
+- properties that exists in all union members (`id`) are combined to union the property types
+- properties defined in the same way (`name`) are just persisted unchanged since all union members are the same
+  - `string | string` union would simply be `string`
+
+## Discriminated union
+
+- unions with discriminator (property)
+- (X) usually just let TS infer function conditional return type
+- (X) when return type depends on input value (means it's known at build time) return type inference might not work
+
+```ts showLineNumbers
+type Response = {
     // highlight-start
     status: 'ok'
     data: string[]
@@ -47,26 +138,128 @@ type Result = {
 } | {
     // highlight-start
     status: 'error'
-    data: null
     error: string
     // highlight-end
 }
 
-function do(): Result {
+function makeTheCall(): Response {
   // ...
 }
 
-const result = do()
+const response = makeTheCall()
 
-if (result.status === 'ok') {
-
+if (response.status === 'ok') {
+    console.log(response.data)
+} else {
+    console.error(response.error)
 }
 ```
 
-could be also
+## Infer return type
+
+consider function that returns an HTTP call response
 
 ```ts showLineNumbers
-type Result = {
-    status: 
+function makeTheCall() {
+    let ok: boolean
+    let results: string[]
+    let error: string
+    // ... do the stuff ...
+    if (ok) {
+        return {
+            status: 'ok',
+            data: results
+        }
+    } else {
+        return {
+            status: 'error',
+            message: error
+        }
+    }
+}
+
+/* {
+    status: string
+    data?: string[] | undefined
+    message?: string | undefined
+} */
+```
+
+return type of the function is weakly inferred since both `'ok'` and `'error'` are considered `string`s
+
+to fix it, cast `as const`
+
+```ts showLineNumbers
+function makeTheCall() {
+    let ok: boolean
+    let results: string[]
+    let error: string
+    // ... do the stuff ...
+    if (ok) {
+        return {
+            status: 'ok',
+            data: results
+// highlight-next-line
+        } as const // ✨
+    } else {
+        return {
+            status: 'error',
+            message: error
+// highlight-next-line
+        } as const // ✨
+    }
+}
+
+// highlight-start
+/* {
+    status: 'ok'
+    data: string[]
+} | {
+    status: 'error'
+    message: string
+} */
+// highlight-end
+```
+
+now we can safely do stuff considering status
+
+```ts showLineNumbers
+const response = makeTheCall()
+
+// highlight-next-line
+if (response.status === 'ok') {
+    console.log(response.data)
+} else {
+    console.error(response.error)
 }
 ```
+
+## return type
+
+when inferring return type dynamically and need to use the shape somewhere else use `ReturnType` utility type
+
+```ts showLineNumbers
+type Response = ReturnType<typeof makeTheCall>
+
+// highlight-start
+/* {
+    status: 'ok'
+    data: string[]
+} | {
+    status: 'error'
+    message: string
+} */
+// highlight-end
+```
+
+:::tip Did you know?
+
+`typeof` operator can be used for types as well inferring shape of something already defined
+
+:::
+
+## Self-defeat with `any`
+
+DRAFT
+- prefer `unknown`
+- `never`?
