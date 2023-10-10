@@ -245,28 +245,6 @@ Here are some crucial benefits of casting return types:
 - we don't have to specify types,
 - TS will infer the types, which is highly recommended.
 
-
-## Generic types
-
-- useful when we don't mind about what's the shape of function argument
-
-```ts showLineNumbers
-// highlight-next-line
-function map<Input>(input: Input) {
-
-    return {
-        data: input
-    }
-}
-
-// highlight-start
-map('this') // ✨ { data: string }
-map([0, 1, 10]) // ✨ { data: number[] }
-// highlight-end
-```
-
-- generics are much more powerful than that
-
 ## Return type
 
 The `ReturnType` utility type is a generic type that helps us easily define the type returned by a function. The typeof operator infers the shape of an object.
