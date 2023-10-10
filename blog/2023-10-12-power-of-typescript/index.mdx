@@ -163,22 +163,28 @@ function makeTheCall() {
     let error: string
     // ... do the stuff ...
     if (ok) {
+        // highlight-start
         return {
             status: 'ok',
             data: results
         }
+        // highlight-end
     } else {
+        // highlight-start
         return {
             status: 'error',
             message: error
         }
+        // highlight-end
     }
 }
 
 /* {
+// highlight-start
     status: string
     data?: string[] | undefined
     message?: string | undefined
+// highlight-end
 } */
 ```
 Return type of the function is weakly inferred, since both `'ok'` and `'error'` are considered to be `string`s.
