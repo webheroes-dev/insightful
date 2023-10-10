@@ -6,30 +6,31 @@ tags: [typescript]
 draft: true
 ---
 
-- TypeScript itself introduces some safety to codebase
-- we can help TS make it safer
+- using TypeScript itselt introduces some degree of safety to your codebase
+- we can easily boost TS safety even more
 
 <!--truncate-->
 
 :::tip Remember
 
 - TypeScript works at build time only
-- types are removed when code is compiled to JS
+- all types are removed when code is compiled to JS
 
 :::
 
 :::note
 
-for example below:
+Consider the following example:
 - status is either `'ok'` or `'error'`
 - if ok, `data` is a list of strings
-- in case of an error, `data` is `null` and `error` is a message
+- in case of an error, `error` is a message.
 
 :::
 
-## Narrow literals
+## Narrow to literals
 
-given:
+Let's define a simple variable:
+
 
 ```ts showLineNumbers
 const result = {
@@ -38,7 +39,7 @@ const result = {
 }
 ```
 
-looks fine...probably
+At first glance everything looks fine, no error is thrown. 
 
 ```ts showLineNumbers
 if (result.status === 'error') {
@@ -47,7 +48,7 @@ if (result.status === 'error') {
 }
 ```
 
-- use `as const` cast to define literal
+Let's see how it behaves if we use `as const` cast to define a literal type string.
 
 ```ts showLineNumbers
 const saferResult = {
@@ -62,29 +63,39 @@ if (saferResult.status === 'error') {
 }
 // highlight-end
 ```
+Using literal types is extremely useful, when we precisely know the possible values of a variable. 
 
-- useful when value can be only one of a well known values
+Narrowing the range of possible values may seem quite non-intuitive, but it actually has many advantages.
+By removing the parts of code that would never actually accur, we:
+- significantly improve the quality of our code,
+- we improve the developer experience for others that will later on work on our code,
+- we make the application lighter - removing a single unnecessary position from your code may seem to be irrelevant, but when we're talking about multiple lines in a massive application - it might considerably improve your app's performance.
 
 ## Union types
 
-- status above could be defined as (depends on)
+With union types, you specify the possible values of a type. It's up to you how many values the type can have.
+In the following example, we define a primitive type, Status:
+
 
 ```ts showLineNumbers
 type Status = 'ok' | 'error'
 ```
 
-- we can create unions of any shape
+Unions can be much more complex and have various shapes. In the following example, we're creating a new type based on a union of two different types.
 
 ```ts showLineNumbers
-type Entity = {
+type Person = {
     id: string
     name: string
     email: string
-} | {
+}
+type Company = {
     id: number
     name: string
     phoneNumber: string
 }
+
+type Entity = Person | Company
 
 /*
 type Entity = {
@@ -95,17 +106,17 @@ type Entity = {
 */
 }
 ```
-
-- in the example `email` neither `phoneNumber` are in both so are removed when using union
-- properties that exists in all union members (`id`) are combined to union the property types
-- properties defined in the same way (`name`) are just persisted unchanged since all union members are the same
-  - `string | string` union would simply be `string`
+Elements that are not present in both Person and Company (`email`, `phoneNumber`) are removed when we're using union.
+Properties that are defined in the same way (`name`), remain unchanged in our result (the union of string | string is string). 
+In case of `id`, because it was present in both types, but with different values, the result is a union of both types.
 
 ## Discriminated union
 
-- unions with discriminator (property)
-- (X) usually just let TS infer function conditional return type
-- (X) when return type depends on input value (means it's known at build time) return type inference might not work
+If a property occurs only in specific circumstances, we can verify its value using a discriminator. 
+The type is then resolved to a member of this union.
+
+We usually let TS infer the function conditional return type. However, it might not work, when return type depends on input value (which means that it's known at build time).
+
 
 ```ts showLineNumbers
 type Response = {
@@ -133,9 +144,13 @@ if (response.status === 'ok') {
 }
 ```
 
+The main advantage of such strong typing, is that our code is much more simple. 
+We don't need to additionally check if the data or error property is in the variable.
+
+
 ## Infer return type
 
-consider function that returns an HTTP call response
+Consider the following function that returns an HTTP call response:
 
 ```ts showLineNumbers
 function makeTheCall() {
@@ -162,10 +177,11 @@ function makeTheCall() {
     message?: string | undefined
 } */
 ```
+Return type of the function is weakly inferred, since both `'ok'` and `'error'` are considered as `string`s.
 
-return type of the function is weakly inferred since both `'ok'` and `'error'` are considered `string`s
-
-to fix it, cast `as const`
+In order to fix it, cast `as const`.
+It makes the union much more safe, but TS is still inferring types.
+Simple strings are then considered as constant values - however, if something was declared as a string beforehand, it will still be considered a string.
 
 ```ts showLineNumbers
 function makeTheCall() {
@@ -199,7 +215,9 @@ function makeTheCall() {
 // highlight-end
 ```
 
-now we can safely do stuff considering status
+TypeScript will unite all returns if there is more than one. Usually, TS would infer the type itself.
+
+We can now safely work with the status.
 
 ```ts showLineNumbers
 const response = makeTheCall()
@@ -211,6 +229,11 @@ if (response.status === 'ok') {
     console.error(response.error)
 }
 ```
+
+Here are some crucial benefits of casting return types:
+- we don't have to specify types,
+- TS will infer the types, which is highly recommended. 
+
 
 ## Generic types
 
@@ -235,11 +258,13 @@ map([0, 1, 10]) // ✨ { data: number[] }
 
 ## Return type
 
-when inferring return type dynamically and need to use the shape somewhere else use `ReturnType` utility type
+The `ReturnType` utility type is a generic type that helps us easily define the type returned by a function. The typeof operator infers the shape of an object.
+We can infer the types of variables, that can be then saved for later use in the application. 
+
 
 :::tip Did you know?
 
-in types context, `typeof` operator will infer shape of something already defined
+In the context of types, `typeof` operator will infer the shape of something that has already been defined.
 
 ```ts showLineNumbers
 const label = 'here we go'
