@@ -247,9 +247,21 @@ Here are some crucial benefits of casting return types:
 
 ## Return type
 
-The `ReturnType` utility type is a generic type that helps us easily define the type returned by a function. The typeof operator infers the shape of an object.
-We can infer the types of variables, that can be then saved for later use in the application.
+The `ReturnType` utility type is a generic type that helps us easily define the type returned by a function.
 
+```ts showLineNumbers
+type Response = ReturnType<typeof makeTheCall>
+
+// highlight-start
+/* {
+    status: 'ok'
+    data: string[]
+} | {
+    status: 'error'
+    message: string
+} */
+// highlight-end
+```
 
 :::tip Did you know?
 
@@ -270,18 +282,6 @@ type Response = typeof response
 } */
 ```
 
+We can infer the types of variables, that can be then saved for later use in the application.
+
 :::
-
-```ts showLineNumbers
-type Response = ReturnType<typeof makeTheCall>
-
-// highlight-start
-/* {
-    status: 'ok'
-    data: string[]
-} | {
-    status: 'error'
-    message: string
-} */
-// highlight-end
-```
