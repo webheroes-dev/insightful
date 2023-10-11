@@ -106,7 +106,7 @@ type Entity = {
 */
 }
 ```
-If a property is absent from any of the members, it is removed when we're using union.
+If a property is absent in any of the members, it is removed when we're using union.
 For example, `email` is only present in Person, not in Company - that's why it's not included in the union. 
 The same goes for `phoneNumber`.
 Properties that are defined in the same way (`name`), remain unchanged in our result (the union of `string | string` is `string`).
