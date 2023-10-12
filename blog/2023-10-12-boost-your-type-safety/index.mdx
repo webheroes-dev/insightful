@@ -1,0 +1,285 @@
+---
+slug: boost-your-type-safety
+title: Boost your type safety
+authors: [krystian, barbie]
+tags: [typescript]
+draft: true
+---
+
+Are you tired of annoying errors and bugs after your code has been released?
+Then it's about time you became best friends with TypeScript!
+The sole fact of using TypeScript introduces some degree of safety to our codebase.
+But you can easily boost type safety with TypeScript even more.
+Here are some tricks that will help you achieve this goal and improve the quality of your code at the same time.
+
+
+<!--truncate-->
+
+:::tip Remember
+
+- TypeScript works at build time only
+- all types are removed when code is compiled to JS
+
+:::
+
+
+## Narrow to literals
+
+Let's define a&nbsp;simple variable:
+
+
+```ts showLineNumbers
+const result = {
+    status: 'ok', // string
+    data: ['here we go'] // string[]
+}
+// ...
+if (result.status === 'error') {
+    // ...
+}
+```
+
+At first glance everything looks fine, no error is thrown.
+
+```ts showLineNumbers
+if (result.status === 'error') {
+    // 🥴 We should never be here since `status` was 'ok'.
+}
+```
+
+The condition doesn't make sense, but it will pass compilation.
+
+
+Let's see how it behaves if we use `as const` cast to define a&nbsp;literal type string.
+
+```ts showLineNumbers
+const saferResult = {
+    // highlight-next-line
+    status: 'ok' as const, // ✨ 'ok'
+    data: ['here we go again'] // string[]
+}
+// highlight-start
+if (saferResult.status === 'error') {
+    // ✨ TS will complain since 'error' could not be 'ok',
+    // compilation fails, we are safe
+}
+// highlight-end
+```
+Using literal types is extremely useful, when we precisely know the values of a&nbsp;variable.
+
+Narrowing the range of possible values may seem quite non-intuitive, but it actually has many advantages.
+By removing the parts of code that would never actually impact the application in any way, we:
+- significantly improve the quality of our code,
+- we improve the developer experience for everyone (including ourselves) that will later on work on our code,
+- we make the application lighter - removing a&nbsp;single unnecessary position from our code may seem to be irrelevant,
+  but when we're talking about multiple lines in a&nbsp;massive application -
+  it might considerably improve our app's performance.
+
+## Union types
+
+With union types, you specify the possible values of a&nbsp;type. It's up to you how many values the type can have.
+In the following example, we define a&nbsp;primitive type, `Status`:
+
+
+```ts showLineNumbers
+type Status = 'ok' | 'error'
+```
+
+Unions can be much more complex and have various shapes. In the following example, we're creating a&nbsp;new type based on a&nbsp;union of two different types.
+
+```ts showLineNumbers
+type Person = {
+    id: string
+    name: string
+    email: string
+}
+type Company = {
+    id: number
+    name: string
+    phoneNumber: string
+}
+
+type Entity = Person | Company
+
+/*
+type Entity = {
+// highlight-next-line
+    id: string | number
+    name: string
+}
+*/
+}
+```
+If a&nbsp;property is absent from any of the members, it is removed when we're using union.
+For example, `email` is only present in Person, not in Company - that's why it's not included in the union.
+The same goes for `phoneNumber`.
+Properties that are defined in the same way (`name`), remain unchanged in our result (the union of `string | string` is `string`).
+In case of `id`, because it was present in both types, but with different values, the result is a&nbsp;union of both types.
+
+## Discriminated union
+
+If a&nbsp;property exists only in specific circumstances, we can verify its presence using a&nbsp;discriminator.
+The type is then resolved to a&nbsp;member of this union.
+
+```ts showLineNumbers
+type Response = {
+    // highlight-start
+    status: 'ok'
+    data: string[]
+    // highlight-end
+} | {
+    // highlight-start
+    status: 'error'
+    error: string
+    // highlight-end
+}
+
+function makeTheCall(): Response {
+  // ...
+}
+
+const response = makeTheCall()
+
+if (response.status === 'ok') {
+    console.log(response.data)
+} else {
+    console.error(response.error)
+}
+```
+
+The main advantage of such strong typing is that our code is much more simple.
+We don't need to additionally check if the `data` or `error` property is in the variable.
+
+
+## Infer return type
+
+Consider the following function that returns an HTTP call response:
+
+```ts showLineNumbers
+function makeTheCall() {
+    let ok: boolean
+    let results: string[]
+    let error: string
+    // ... do the stuff ...
+    if (ok) {
+        // highlight-start
+        return {
+            status: 'ok',
+            data: results
+        }
+        // highlight-end
+    } else {
+        // highlight-start
+        return {
+            status: 'error',
+            message: error
+        }
+        // highlight-end
+    }
+}
+
+/* {
+// highlight-start
+    status: string
+    data?: string[] | undefined
+    message?: string | undefined
+// highlight-end
+} */
+```
+Return type of the function is weakly inferred, since both `'ok'` and `'error'` are considered to be `string`s.
+
+In order to fix it, cast `as const`.
+It makes the union much more safe, but TS is still inferring types.
+Simple strings are then considered constant values - however, if something was declared as a&nbsp;`string` beforehand, it would still be considered a&nbsp;regular `string`.
+
+```ts showLineNumbers
+function makeTheCall() {
+    let ok: boolean
+    let results: string[]
+    let error: string
+    // ... do the stuff ...
+    if (ok) {
+        return {
+            status: 'ok',
+            data: results
+// highlight-next-line
+        } as const // ✨
+    } else {
+        return {
+            status: 'error',
+            message: error
+// highlight-next-line
+        } as const // ✨
+    }
+}
+
+// highlight-start
+/* {
+    status: 'ok'
+    data: string[]
+} | {
+    status: 'error'
+    message: string
+} */
+// highlight-end
+```
+
+TypeScript will infer and unite all returns.
+
+Having cast both returns `as const`, we can now safely work with the status.
+
+```ts showLineNumbers
+const response = makeTheCall()
+
+// highlight-next-line
+if (response.status === 'ok') {
+    console.log(response.data)
+} else {
+    console.error(response.error)
+}
+```
+
+Here are some crucial benefits of casting return types:
+- we don't have to specify types,
+- TS will infer the types, which is highly recommended.
+
+## Return type
+
+The `ReturnType` utility type is a&nbsp;generic type that helps us easily define the type returned by a&nbsp;function.
+
+```ts showLineNumbers
+type Response = ReturnType<typeof makeTheCall>
+
+// highlight-start
+/* {
+    status: 'ok'
+    data: string[]
+} | {
+    status: 'error'
+    message: string
+} */
+// highlight-end
+```
+
+:::tip Did you know?
+
+In the context of types, `typeof` operator will infer the shape of something that has already been defined.
+
+```ts showLineNumbers
+const label = 'here we go'
+type Label = typeof label // ✨ string
+
+const response = {
+    status: 'ok' as const,
+    data: ['here we go again']
+}
+type Response = typeof response
+/* ✨ {
+    status: 'ok'
+    data: string[]
+} */
+```
+
+We can infer the types of variables, that can be then saved for later use in the application.
+
+:::
