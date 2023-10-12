@@ -18,3 +18,19 @@ Handle state properly
 
 
 <!--truncate-->
+
+```tsx showLineNumbers
+interface Props {
+    firstName: string
+    lastName: string
+}
+function Component(props: Props) {
+    const {firstName, lastName} = props
+
+    const [fullName, setFullName] = useState()
+
+    useEffect(() => {
+        setFullName(`${firstName} ${lastName}`)
+    }, [firstName, lastName])
+}
+```
