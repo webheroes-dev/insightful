@@ -19,6 +19,10 @@ Handle state properly
 
 <!--truncate-->
 
+# problem: need to combine props together
+
+common mistake: synchronizing with use of `useEffect` and `useState`
+
 ```tsx showLineNumbers
 interface Props {
     firstName: string
@@ -33,4 +37,75 @@ function Component(props: Props) {
         setFullName(`${firstName} ${lastName}`)
     }, [firstName, lastName])
 }
+```
+
+solution: derive value from props
+
+```tsx showLineNumbers
+interface Props {
+    firstName: string
+    lastName: string
+}
+function Component(props: Props) {
+    const {firstName, lastName} = props
+
+    // highlight-next-line
+    const fullName = `${firstName} ${lastName}` // ✨
+}
+```
+
+# problem: need to combine states
+
+common mistake: synchronizing with use of `useEffect` and extra `useState`
+
+
+```tsx showLineNumbers
+function Component() {
+    const [firstName, setFirstName] = useState()
+    const [lastName, setLastName] = useState()
+
+    const [fullName, setFullName] = useState()
+
+    useEffect(() => {
+        setFullName(`${firstName} ${lastName}`)
+    }, [firstName, lastName])
+}
+```
+
+solution: derive from current state
+
+```tsx showLineNumbers
+function Component() {
+    const [firstName, setFirstName] = useState()
+    const [lastName, setLastName] = useState()
+
+    // highlight-next-line
+    const fullName = `${firstName} ${lastName}` // ✨
+}
+```
+
+# problem: filter data or perform search
+
+common mistake #1: introduced complexity with _context_
+
+```tsx showLineNumbers
+const FilterContext = React.createContext()
+
+function useFilter() {
+    const filter = React.useContext(FilterContext)
+
+    return filter
+}
+
+function Page() {
+    const [filter, setFilter] = useState()
+
+    return (
+        <FilterContext.Provider value={filter}>
+            <Filter onChange={(filter) => setFilter(filter)}>
+            
+        </FilterContext.Provider>
+    )
+}
+
 ```
