@@ -84,28 +84,210 @@ function Component() {
 }
 ```
 
-# problem: filter data or perform search
+# problem: many related states
 
-common mistake #1: introduced complexity with _context_
+common mistake: many React states
 
 ```tsx showLineNumbers
-const FilterContext = React.createContext()
+function Component() {
+    const [loading, setLoading] = useState()
+    const [data, setData] = useState()
+    const [error, setError] = useState()
 
-function useFilter() {
-    const filter = React.useContext(FilterContext)
-
-    return filter
+    function load() {
+        setLoading(true)
+        
+        fetch(/* ... */)
+        .then((data) => {
+            setData(data)
+            // highlight-next-line
+            setLoading(false)
+        })
+        .catch((error) => {
+            setError(error)
+            //highlight-next-line
+            setLoading(false)
+        })
+    }
 }
-
-function Page() {
-    const [filter, setFilter] = useState()
-
-    return (
-        <FilterContext.Provider value={filter}>
-            <Filter onChange={(filter) => setFilter(filter)}>
-            
-        </FilterContext.Provider>
-    )
-}
-
 ```
+
+`setLoading` needs to be called along with `setData` and `setError`
+
+above may also lead to bugs
+- when `setData` is called, we should clean `error` state
+- when `setError` is called, we may clean `data` state
+
+```tsx showLineNumbers
+function Component() {
+    const [loading, setLoading] = useState()
+    const [data, setData] = useState()
+    const [error, setError] = useState()
+
+    function load() {
+        setLoading(true)
+        
+        fetch(/* ... */)
+        .then((data) => {
+            setData(data)
+            setLoading(false)
+            // highlight-next-line
+            setError(null)
+        })
+        .catch((error) => {
+            setError(error)
+            setLoading(false)
+            // highlight-next-line
+            setData(null)
+        })
+    }
+}
+```
+
+could be even worse
+
+solution: use underrated `useReducer`
+
+```tsx showLineNumbers
+const [response, setResponse] = useReducer((lastResponse, payload) => {
+    if (payload === null) {
+        return {
+            loading: true,
+            data: null,
+            error: null,
+        }
+    } else if (payload instanceof Error) {
+        return {
+            loading: false
+            data: null
+            error: payload,
+        }
+    } else {
+        return {
+            loading: false
+            data: payload
+            error: null
+        }
+    }
+})
+
+function load() {
+    setResponse(null)
+
+    fetch(/* ... */)
+    .then((data) => setResponse(data))
+    .catch((error) => setResponse(error))
+}
+```
+
+perks: we don't need to manage every single state individually
+
+with use of first parameter of reducer function we can make it to return loading state along with previously fetched data (e.g. for refreshing purposes with an indicator)
+
+# problem: filtering on a page
+
+challenges:
+- refreshing the page loses the state so we need to fill filters again
+- tricky to update all state consumers when many
+
+solution: derive state from URL
+- refreshing page keeps filtering state
+- we can have as many components using the state as we want, even deeply nested
+
+URL itself may contain state of the app like current filtering/paging info (e.g. search term, page number)
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem default value='react-router' label='React Router'>
+
+```tsx showLineNumbers
+import { useSearchParams } from "react-router-dom";
+
+function useSearchQuery() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const query = searchParams.get('query')
+
+    function setQuery(query: string) {
+        setSearchParams({ query })
+    }
+
+    return [query, setQuery];
+}
+```
+
+</TabItem>
+<TabItem value='remix' label='Remix'>
+
+```tsx showLineNumbers
+import { useSearchParams } from "@remix-run/react";
+
+function useSearchQuery() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const query = searchParams.get('query')
+
+    function setQuery(query: string) {
+        setSearchParams((searchParams) => {
+            searchParams.set('query', query)
+        })
+    }
+
+    return [query, setQuery];
+}
+```
+
+</TabItem>
+<TabItem value='nextjs-app-router' label='Next.js (App)'>
+
+```tsx showLineNumbers
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+
+function useSearchQuery() {
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const query = searchParams.get('query')
+
+    function setQuery(query: string) {
+        const newSearchParams = new URLSearchParams(searchParams)
+        newSearchParams.set('query', query)
+
+        router.push(`${pathname}?${newSearchParams.toString()}`)
+    }
+
+    return [query, setQuery];
+}
+```
+
+</TabItem>
+<TabItem value='nextjs-pages' label='Next.js (Pages)'>
+
+```tsx showLineNumbers
+import { useRouter } from 'next/router'
+
+function useSearchQuery() {
+    const router = useRouter();
+    const { pathname, query: searchParams } = router;
+
+    const { query } = searchParams
+
+    function setQuery(query: string) {
+        router.push({
+            pathname,
+            query: {
+                ...searchParams,
+                query,
+            }
+        })
+    }
+
+    return [query, setQuery];
+}
+```
+
+</TabItem>
+</Tabs>
