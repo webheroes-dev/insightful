@@ -1,0 +1,17 @@
+```tsx showLineNumbers
+import { useSearchParams } from "@remix-run/react";
+
+function useSearchQuery() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const query = searchParams.get('query')
+
+    function setQuery(query: string) {
+        setSearchParams((searchParams) => {
+            searchParams.set('query', query)
+        })
+    }
+
+    return [query, setQuery];
+}
+```

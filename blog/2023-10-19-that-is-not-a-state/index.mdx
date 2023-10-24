@@ -196,98 +196,14 @@ solution: derive state from URL
 
 URL itself may contain state of the app like current filtering/paging info (e.g. search term, page number)
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
+import QueryParamsSnippets from './snippet/query-params/__tabs.mdx'
 
-<Tabs>
-<TabItem default value='react-router' label='React Router'>
+<QueryParamsSnippets />
 
-```tsx showLineNumbers
-import { useSearchParams } from "react-router-dom";
+# problem: tabs on a page
 
-function useSearchQuery() {
-    const [searchParams, setSearchParams] = useSearchParams();
+challenges:
+- tricky to restore active tab on page refresh
 
-    const query = searchParams.get('query')
-
-    function setQuery(query: string) {
-        setSearchParams({ query })
-    }
-
-    return [query, setQuery];
-}
-```
-
-</TabItem>
-<TabItem value='remix' label='Remix'>
-
-```tsx showLineNumbers
-import { useSearchParams } from "@remix-run/react";
-
-function useSearchQuery() {
-    const [searchParams, setSearchParams] = useSearchParams();
-
-    const query = searchParams.get('query')
-
-    function setQuery(query: string) {
-        setSearchParams((searchParams) => {
-            searchParams.set('query', query)
-        })
-    }
-
-    return [query, setQuery];
-}
-```
-
-</TabItem>
-<TabItem value='nextjs-app-router' label='Next.js (App)'>
-
-```tsx showLineNumbers
-import { useSearchParams, usePathname, useRouter } from "next/navigation";
-
-function useSearchQuery() {
-    const searchParams = useSearchParams();
-    const pathname = usePathname();
-    const router = useRouter();
-
-    const query = searchParams.get('query')
-
-    function setQuery(query: string) {
-        const newSearchParams = new URLSearchParams(searchParams)
-        newSearchParams.set('query', query)
-
-        router.push(`${pathname}?${newSearchParams.toString()}`)
-    }
-
-    return [query, setQuery];
-}
-```
-
-</TabItem>
-<TabItem value='nextjs-pages' label='Next.js (Pages)'>
-
-```tsx showLineNumbers
-import { useRouter } from 'next/router'
-
-function useSearchQuery() {
-    const router = useRouter();
-    const { pathname, query: searchParams } = router;
-
-    const { query } = searchParams
-
-    function setQuery(query: string) {
-        router.push({
-            pathname,
-            query: {
-                ...searchParams,
-                query,
-            }
-        })
-    }
-
-    return [query, setQuery];
-}
-```
-
-</TabItem>
-</Tabs>
+solution: keep active tab id as URL' hash
+- easy to share/bookmark page focused on the tab
