@@ -6,7 +6,9 @@ tags: [react, state]
 draft: true
 ---
 
-Handle state properly
+In React we often use states for elements are not necessarily states.
+It could be
+There are many challenges related to usage of states, here are some possible issues.
 
 ...
 
@@ -21,9 +23,11 @@ Handle state properly
 
 <!--truncate-->
 
-## problem: need to combine props together
+## Challenge I: you need to combine different props together
 
-common mistake: synchronizing with use of `useEffect` and `useState`
+React props are often synchronized to a specific state. 
+Let's say you have `firstName` and `lastName` as separate strings in input, and you need to have it as a single string `FullName`.
+The common mistake here would be to synchronize it with `useEffect` and `useState`.
 
 ```tsx showLineNumbers
 interface Props {
@@ -41,7 +45,8 @@ function Component(props: Props) {
 }
 ```
 
-solution: derive value from props
+However, there's a better solution! Just derive values from other props, where they are logically connected.
+Fixing it this way if often a one-line change. 
 
 ```tsx showLineNumbers
 interface Props {
@@ -56,9 +61,10 @@ function Component(props: Props) {
 }
 ```
 
-## problem: need to combine states
+## Challenge II: you need to combine different states
 
-common mistake: synchronizing with use of `useEffect` and extra `useState`
+If we have several states within a component, we often need to join two states together. 
+Here, as well as in the previous example, it would be common to synchronize it with use of `useEffect` and extra `useState`.
 
 
 ```tsx showLineNumbers
@@ -73,8 +79,8 @@ function Component() {
     }, [firstName, lastName])
 }
 ```
-
-solution: derive from current state
+We can easily simplify it by deriving the value from the current state, 
+where there is a logical dependency between them.
 
 ```tsx showLineNumbers
 function Component() {
@@ -86,9 +92,17 @@ function Component() {
 }
 ```
 
-## problem: many related states
+## Challenge III: there are many related React states
 
-common mistake: many React states
+Sometimes when we have many related states, one results from the other, but it can have various forms. 
+Let's say we're loading data for our component from an external source. 
+We have a state telling us if it's loading or not (`setLoading`), a state for an error (`setError`) and a state for our data (`setData`). 
+If it's loading, it's logical that are is not error.
+Nevertheless, we need to specify each state separately. If the query is successfull, we set our data and the loading state to `False`.
+In case of an error, we specify the error value and the loading state to `False`. 
+The approach described above may cause some issues. When `setData` is called, we should clean the `error` state.
+Similarly, when `setError` is called, we should clean the `data` state.
+
 
 ```tsx showLineNumbers
 function Component() {
@@ -114,11 +128,7 @@ function Component() {
 }
 ```
 
-`setLoading` needs to be called along with `setData` and `setError`
-
-above may also lead to bugs
-- when `setData` is called, we should clean `error` state
-- when `setError` is called, we may clean `data` state
+Here it should be stressed, that the issue could be even more complex and thus more difficult to solve.
 
 ```tsx showLineNumbers
 function Component() {
@@ -146,9 +156,14 @@ function Component() {
 }
 ```
 
-could be even worse
+A possible solution would be to use a very underrated hook, `useReducer`, that could return several values at the same time.
+Depending on what is our input, if we set the data, it would automatically swith to the loading state. 
+It's basically a synchronization of multiple states - we don't need to manage them separately.
+The first parameter of the `useReducer` is a function that requires two parameters - the first one is the previous state, the second one is our action,
+i.e. what we will use the `useReducer` with. It could be extremely useful, when we want to perform an action based on our previous state, for example,
+if we want to refresh a query that wa already invoked, we might want to add a loading indicator, but we still want the data to be visible.
 
-solution: use underrated `useReducer`
+
 
 ```tsx showLineNumbers
 const [response, setResponse] = useReducer((lastResponse, payload) => {
@@ -182,34 +197,35 @@ function load() {
 }
 ```
 
-perks: we don't need to manage every single state individually
+It could be extremely useful, when we want to perform an action based on our previous state, for example,
+if we want to refresh a query that wa already invoked, we might want to add a loading indicator, but we still want the data to be visible.
 
-with use of first parameter of reducer function we can make it to return loading state along with previously fetched data (e.g. for refreshing purposes with an indicator)
 
-## problem: filtering on a page
 
-challenges:
-- refreshing the page loses the state so we need to fill filters again
-- tricky to update all state consumers when many
+## Challenge IV: filtering on a page
 
-solution: derive state from URL
-- refreshing page keeps filtering state
-- we can have as many components using the state as we want, even deeply nested
+Imagine you filled several filters on a page, but you then accidentally (or on purpose) refreshed the whole page.
+And you missed it all... Sounds annoying, doesn't it? If we have many nested components, it may be quite a challenge
+to preserve tha state of our filters. 
 
-URL itself may contain state of the app like current filtering/paging info (e.g. search term, page number)
+The solution would be to derive the state from the URL. Refreshing the page won't then remove our filters.
+All components, no matter how deeply nested they are, will still have their filter states easily accessible.
+
+The URL itself may contain the state of the app, like current filtering/paging info (e.g. search term, page number).
+
 
 import QueryParamsSnippets from './snippet/query-params/__tabs.mdx'
 
 <QueryParamsSnippets />
 
-## problem: tabs on a page
+## Challenge V: dealing with multiple tabs on a page
 
-challenges:
-- tricky to navigate back/forward keeping active tab
-- tricky to restore active tab on page refresh
+Sometimes it can be really tricky to navigate back/forward and still keep your active tab.
+The same problem occurs when you refresh a page. We simply may loose the state.
 
-solution: keep active tab id as URLs hash
-- easy to share/bookmark page focused on the tab
+However, there's a simple solution to this problem. Just keep the ID of the active tab as a hash in the URL.
+You can then easily share a link to a specific tab and place in the application with others.
+
 
 import HashSnippets from './snippet/hash/__tabs.mdx'
 
