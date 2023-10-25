@@ -1,0 +1,16 @@
+```tsx showLineNumbers
+import { useRouter } from 'next/router'
+
+function useActiveTab() {
+    const router = useRouter();
+    const { hash } = //useLocation()
+
+    const activeTab = hash.slice(1)
+
+    function setActiveTab(activeTab) {
+        router.replace({ hash: `#${activeTab}` }, { shallow: true })
+    }
+
+    return [activeTab, setActiveTab];
+}
+```

@@ -96,7 +96,7 @@ function Component() {
 
     function load() {
         setLoading(true)
-        
+
         fetch(/* ... */)
         .then((data) => {
             setData(data)
@@ -126,7 +126,7 @@ function Component() {
 
     function load() {
         setLoading(true)
-        
+
         fetch(/* ... */)
         .then((data) => {
             setData(data)
@@ -158,15 +158,15 @@ const [response, setResponse] = useReducer((lastResponse, payload) => {
         }
     } else if (payload instanceof Error) {
         return {
-            loading: false
-            data: null
+            loading: false,
+            data: null,
             error: payload,
         }
     } else {
         return {
-            loading: false
-            data: payload
-            error: null
+            loading: false,
+            data: payload,
+            error: null,
         }
     }
 })
@@ -203,7 +203,12 @@ import QueryParamsSnippets from './snippet/query-params/__tabs.mdx'
 # problem: tabs on a page
 
 challenges:
+- tricky to navigate back/forward keeping active tab
 - tricky to restore active tab on page refresh
 
-solution: keep active tab id as URL' hash
+solution: keep active tab id as URLs hash
 - easy to share/bookmark page focused on the tab
+
+import HashSnippets from './snippet/hash/__tabs.mdx'
+
+<HashSnippets />
