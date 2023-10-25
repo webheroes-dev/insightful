@@ -6,9 +6,11 @@ tags: [react, state]
 draft: true
 ---
 
-In React we often use states for elements are not necessarily states.
-It could be
-There are many challenges related to usage of states, here are some possible issues.
+Working with states in React can be tricky due to its volatility. That's why it's crucial 
+to be aware of best practices in managing states that will make your code simple and prone to bugs.
+
+There are many challenges related to the usage of states, 
+here are some possible issues you may stumble upon while working with React states.
 
 ...
 
@@ -23,7 +25,7 @@ There are many challenges related to usage of states, here are some possible iss
 
 <!--truncate-->
 
-## Challenge I: you need to combine different props together
+## Challenge I: you need to combine different props
 
 React props are often synchronized to a specific state. 
 Let's say you have `firstName` and `lastName` as separate strings in input, and you need to have it as a single string `FullName`.
@@ -45,8 +47,9 @@ function Component(props: Props) {
 }
 ```
 
-However, there's a better solution! Just derive values from other props, where they are logically connected.
-Fixing it this way if often a one-line change. 
+However, there's a better solution! 
+Just derive values from other props that are logically connected with each other.
+Fixing it this way is often a one-line change. 
 
 ```tsx showLineNumbers
 interface Props {
@@ -64,7 +67,7 @@ function Component(props: Props) {
 ## Challenge II: you need to combine different states
 
 If we have several states within a component, we often need to join two states together. 
-Here, as well as in the previous example, it would be common to synchronize it with use of `useEffect` and extra `useState`.
+Here, as well as in the previous example, it would be common to synchronize it with `useEffect` and extra `useState`.
 
 
 ```tsx showLineNumbers
@@ -79,8 +82,8 @@ function Component() {
     }, [firstName, lastName])
 }
 ```
-We can easily simplify it by deriving the value from the current state, 
-where there is a logical dependency between them.
+We can simplify it by deriving the value from the current state, 
+if the value results from those states.
 
 ```tsx showLineNumbers
 function Component() {
@@ -92,15 +95,20 @@ function Component() {
 }
 ```
 
-## Challenge III: there are many related React states
+## Challenge III: dealing with many related React states
 
-Sometimes when we have many related states, one results from the other, but it can have various forms. 
+Sometimes, when we have many related states, one results from the other, 
+but it can have various forms. 
 Let's say we're loading data for our component from an external source. 
-We have a state telling us if it's loading or not (`setLoading`), a state for an error (`setError`) and a state for our data (`setData`). 
-If it's loading, it's logical that are is not error.
-Nevertheless, we need to specify each state separately. If the query is successfull, we set our data and the loading state to `False`.
-In case of an error, we specify the error value and the loading state to `False`. 
-The approach described above may cause some issues. When `setData` is called, we should clean the `error` state.
+We have a state telling us if it's loading or not (`setLoading`), a state for an error (`setError`) 
+and a state for our data (`setData`). 
+If it's loading, it's logical that are is no error.
+Nevertheless, we need to specify each state separately.
+If the query is successfull, we set our data and the loading state to `False`.
+In case of an error, we specify the error value and the loading state to `False`.  
+
+The approach described above may cause some issues. When `setData` is called, 
+we should clean the `error` state.
 Similarly, when `setError` is called, we should clean the `data` state.
 
 
@@ -156,12 +164,16 @@ function Component() {
 }
 ```
 
-A possible solution would be to use a very underrated hook, `useReducer`, that could return several values at the same time.
-Depending on what is our input, if we set the data, it would automatically swith to the loading state. 
-It's basically a synchronization of multiple states - we don't need to manage them separately.
-The first parameter of the `useReducer` is a function that requires two parameters - the first one is the previous state, the second one is our action,
-i.e. what we will use the `useReducer` with. It could be extremely useful, when we want to perform an action based on our previous state, for example,
-if we want to refresh a query that wa already invoked, we might want to add a loading indicator, but we still want the data to be visible.
+A possible solution would be to use a very underrated hook, `useReducer`, 
+that could return several values at the same time.
+Depending on what is our input, if we set the data, 
+it would automatically swith to the loading state. 
+It's basically a synchronization of multiple states - we don't need to manage them separately.  
+
+The first parameter of the `useReducer` is a function that requires two parameters - 
+the first one is the previous state, the second one is our action,
+i.e. what we will use the `useReducer` with. 
+
 
 
 
@@ -197,14 +209,16 @@ function load() {
 }
 ```
 
-It could be extremely useful, when we want to perform an action based on our previous state, for example,
-if we want to refresh a query that wa already invoked, we might want to add a loading indicator, but we still want the data to be visible.
+It could be extremely useful, when we want to perform an action based on our previous state.
+For example,
+if we want to refresh a query that we have already run, 
+we might want to add a loading indicator, but we still want the data to be visible.
 
 
 
-## Challenge IV: filtering on a page
+## Challenge IV: you want to keep the filtering on a page
 
-Imagine you filled several filters on a page, but you then accidentally (or on purpose) refreshed the whole page.
+Imagine you filled several filters, but you then accidentally (or on purpose) refreshed the page.
 And you missed it all... Sounds annoying, doesn't it? If we have many nested components, it may be quite a challenge
 to preserve tha state of our filters. 
 
@@ -221,10 +235,10 @@ import QueryParamsSnippets from './snippet/query-params/__tabs.mdx'
 ## Challenge V: dealing with multiple tabs on a page
 
 Sometimes it can be really tricky to navigate back/forward and still keep your active tab.
-The same problem occurs when you refresh a page. We simply may loose the state.
+The same problem occurs when you refresh a page - you simply loose the state.
 
 However, there's a simple solution to this problem. Just keep the ID of the active tab as a hash in the URL.
-You can then easily share a link to a specific tab and place in the application with others.
+You can then easily share/bookmark a link to a specific tab and place in the application.
 
 
 import HashSnippets from './snippet/hash/__tabs.mdx'
