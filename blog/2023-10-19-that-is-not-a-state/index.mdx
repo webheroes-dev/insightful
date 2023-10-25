@@ -126,9 +126,10 @@ function Component() {
 The approach described above may cause some issues. When `setData` is called, 
 we should clean the `error` state.
 Similarly, when `setError` is called, we should clean the `data` state.
+
 We could think about using a `useEffect` in order to synchronize those states, for example when
-data is non-nullish, we could set `error` to null. And likewise, when `error` is present, 
-data could be set to null.
+data is non-nullish, we could set `error` to `null`. And likewise, when `error` is present, 
+data could be set to `null`.
 
 Here it should be stressed, that the issue could be even more complex and thus more difficult to solve.
 
