@@ -1,0 +1,20 @@
+```tsx showLineNumbers
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+
+function useSearchQuery() {
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const query = searchParams.get('query')
+
+    function setQuery(query: string) {
+        const newSearchParams = new URLSearchParams(searchParams)
+        newSearchParams.set('query', query)
+
+        router.push(`${pathname}?${newSearchParams.toString()}`)
+    }
+
+    return [query, setQuery];
+}
+```

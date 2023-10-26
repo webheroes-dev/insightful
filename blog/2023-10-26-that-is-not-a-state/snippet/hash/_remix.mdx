@@ -1,0 +1,16 @@
+```tsx showLineNumbers
+import { useNavigate, useLocation } from "@remix-run/react";
+
+function useActiveTab() {
+    const navigate = useNavigate();
+    const { hash } = useLocation()
+
+    const activeTab = hash.slice(1)
+
+    function setActiveTab(activeTab) {
+        navigate({ hash: `#${activeTab}` }, { replace: true })
+    }
+
+    return [activeTab, setActiveTab];
+}
+```

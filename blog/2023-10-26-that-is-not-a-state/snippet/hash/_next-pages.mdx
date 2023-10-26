@@ -1,0 +1,54 @@
+```tsx showLineNumbers
+import { useRouter } from 'next/router'
+
+function getHash(locationOrUrl) {
+    return locationOrUrl.hash.slice(1)
+}
+
+function useActiveTab() {
+    const router = useRouter();
+    const [hash, setHash] = useState('')
+
+    const router = useRouter()
+    const {isReady, events} = router
+
+    useEffect(() => {
+        setHash(getHash(location))
+
+        const handler = () => {
+            setHash(getHash(location))
+        }
+
+        window.addEventListener('hashchange', handler)
+
+        return () => window.removeEventListener('hashchange', handler)
+    }, []);
+
+    useEffect(() => {
+        if (!isReady) {
+            return
+        }
+
+        const {on, off} = events
+        const handler = (path: string) => {
+            const url = new URL(path, location.origin)
+            setHash(getHash(url))
+        }
+
+        on('hashChangeStart', handler)
+        on('routeChangeStart', handler)
+
+        return () => {
+            off('hashChangeStart', handler)
+            off('routeChangeStart', handler)
+        }
+    }, [isReady, events]);
+
+    function setActiveTab(activeTab) {
+        const url = { hash: activeTab }
+        router.replace(url, url, { shallow: true })
+    }
+
+    return [hash, setActiveTab];
+}
+```

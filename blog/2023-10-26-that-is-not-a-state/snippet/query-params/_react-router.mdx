@@ -1,0 +1,15 @@
+```tsx showLineNumbers
+import { useSearchParams } from "react-router-dom";
+
+function useSearchQuery() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const query = searchParams.get('query')
+
+    function setQuery(query: string) {
+        setSearchParams({ query })
+    }
+
+    return [query, setQuery];
+}
+```

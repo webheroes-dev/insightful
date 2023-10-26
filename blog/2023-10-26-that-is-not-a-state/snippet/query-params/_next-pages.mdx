@@ -1,0 +1,22 @@
+```tsx showLineNumbers
+import { useRouter } from 'next/router'
+
+function useSearchQuery() {
+    const router = useRouter();
+    const { pathname, query: searchParams } = router;
+
+    const { query } = searchParams
+
+    function setQuery(query: string) {
+        router.push({
+            pathname,
+            query: {
+                ...searchParams,
+                query,
+            }
+        })
+    }
+
+    return [query, setQuery];
+}
+```

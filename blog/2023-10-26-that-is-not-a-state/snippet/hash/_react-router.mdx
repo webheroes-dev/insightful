@@ -1,0 +1,16 @@
+```tsx showLineNumbers
+import { useNavigate, useLocation } from "react-router-dom";
+
+function useActiveTab() {
+    const navigate = useNavigate();
+    const { hash } = useLocation()
+
+    const activeTab = hash.slice(1)
+
+    function setActiveTab(activeTab) {
+        navigate(`#${activeTab}`, { replace: true })
+    }
+
+    return [activeTab, setActiveTab];
+}
+```
