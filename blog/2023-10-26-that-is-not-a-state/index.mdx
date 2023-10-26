@@ -3,13 +3,12 @@ slug: that-is-not-a-state
 title: That's not a state (anymore)
 authors: [krystian, barbie]
 tags: [react, state]
-draft: true
 ---
 
-Working with states in React can be tricky due to their volatility. That's why it's crucial 
+Working with states in React can be tricky due to their volatility. That's why it's crucial
 to be aware of best practices in managing states that will make your code simple and prone to bugs.
 
-There are many challenges related to the usage of states, 
+There are many challenges related to the usage of states,
 here are some possible issues you may stumble upon while working with React states.
 
 
@@ -17,7 +16,7 @@ here are some possible issues you may stumble upon while working with React stat
 
 ## Challenge I: you need to combine different props
 
-React props are sometimes synchronized to a&nbsp;specific state. 
+React props are sometimes synchronized to a&nbsp;specific state.
 Let's say you have `firstName` and `lastName` as separate strings in props, and you need to have it as a&nbsp;single string `fullName`.
 The common mistake here would be to synchronize it with `useEffect` and `useState`.
 
@@ -37,7 +36,7 @@ function Component(props: Props) {
 }
 ```
 
-However, there's a&nbsp;better solution! 
+However, there's a&nbsp;better solution!
 Just derive values from other props that are logically connected with each other.
 Fixing it often means replacing many lines of code with a&nbsp;single one, which significantly improves
 the readability of our code.
@@ -58,7 +57,7 @@ function Component(props: Props) {
 
 ## Challenge II: you need to combine different states
 
-If we have several states within a&nbsp;component, we sometimes need to join two states together. 
+If we have several states within a&nbsp;component, we sometimes need to join two states together.
 Here, as well as in the previous example, it would be common to synchronize it with `useEffect` and extra `useState`.
 
 
@@ -74,7 +73,7 @@ function Component() {
     }, [firstName, lastName])
 }
 ```
-We can simplify it by deriving the value from the current state, 
+We can simplify it by deriving the value from the current state,
 if the value results from those states.
 
 ```tsx showLineNumbers
@@ -89,15 +88,15 @@ function Component() {
 
 ## Challenge III: dealing with many related React states
 
-Sometimes, when we have many related states, one results from the other, 
-but it can have various forms. 
-Let's say we're loading data for our component from an external source. 
-We have a&nbsp;state telling us if it's loading or not (`loading`), a&nbsp;state for an error (`error`) 
-and a&nbsp;state for our data (`data`). 
+Sometimes, when we have many related states, one results from the other,
+but it can have various forms.
+Let's say we're loading data for our component from an external source.
+We have a&nbsp;state telling us if it's loading or not (`loading`), a&nbsp;state for an error (`error`)
+and a&nbsp;state for our data (`data`).
 If it's loading, it's logical that there is no error.
 Nevertheless, we need to specify each state separately.
 If the request is successfull, we set our data and the loading state to `false`.
-In case of an error, we specify the error value and the loading state to `false`.  
+In case of an error, we specify the error value and the loading state to `false`.
 
 
 ```tsx showLineNumbers
@@ -123,12 +122,12 @@ function Component() {
     }
 }
 ```
-The approach described above may cause some issues. When `setData` is called, 
+The approach described above may cause some issues. When `setData` is called,
 we should clean the `error` state.
 Similarly, when `setError` is called, we should clean the `data` state.
 
 We could think about using a `useEffect` in order to synchronize those states, for example when
-data is non-nullish, we could set `error` to `null`. And likewise, when `error` is present, 
+data is non-nullish, we could set `error` to `null`. And likewise, when `error` is present,
 data could be set to `null`.
 
 Here it should be stressed, that the issue could be even more complex and thus more difficult to solve.
@@ -159,14 +158,14 @@ function Component() {
 }
 ```
 
-A possible solution would be to use a&nbsp;very underrated hook, `useReducer`, 
+A possible solution would be to use a&nbsp;very underrated hook, `useReducer`,
 that could return several values at the same time.
-Depending on what is our input, if we send the request, 
-it would automatically switch to the loading state. 
+Depending on what is our input, if we send the request,
+it would automatically switch to the loading state.
 When we get a&nbsp;response, we set the data and clean the error state along with loading status set to `false`.
-It's basically a&nbsp;synchronization of multiple states - we don't need to manage them separately.  
+It's basically a&nbsp;synchronization of multiple states - we don't need to manage them separately.
 
-The first parameter of the `useReducer` is a&nbsp;function that takes two parameters - 
+The first parameter of the `useReducer` is a&nbsp;function that takes two parameters -
 the first one is the previous state, the second one is what we will call the state setter (`setResponse`) with.
 
 ```tsx showLineNumbers
@@ -212,7 +211,7 @@ we might want to add a&nbsp;loading indicator, but we still want the data to be 
 
 Imagine you filled several filters of a&nbsp;table, but you then accidentally (or on purpose) refreshed the page.
 And you missed it all... Sounds annoying, doesn't it? Also, if we have many nested components, it may be quite a&nbsp;challenge
-to pass the state of our filters. 
+to pass the state of our filters.
 
 The solution would be to derive the state from the URL. Refreshing the page won't then remove our filters.
 All components, no matter how deeply nested they are, will still have their filter states easily accessible.

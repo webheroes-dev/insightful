@@ -1,0 +1,25 @@
+```tsx showLineNumbers
+'use client'
+
+import {useEffect, useState} from 'react';
+
+function getHash(locationOrUrl) {
+    return locationOrUrl.hash.slice(1)
+}
+
+function useActiveTab() {
+    const [activeTab, setActiveTab] = useState(getHash(location))
+
+    useEffect(() => {
+        const handler = () => {
+            setActiveTab(getHash(location))
+        }
+
+        window.addEventListener('hashchange', handler)
+
+        return () => window.removeEventListener('hashchange', handler)
+    }, []);
+
+    return [activeTab, setActiveTab];
+}
+```
