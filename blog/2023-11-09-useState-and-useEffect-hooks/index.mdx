@@ -1,0 +1,178 @@
+---
+slug: useState-and-useEffect-hooks
+title: useState and useEffect hooks
+authors: [dilan]
+tags: [react, state]
+---
+
+There are many hooks that you will come across when working with React, each of which have a carefully designed purpose and intricacies.
+
+Understanding `useState` and `useEffect`, two of the most fundamental hooks, is fundamental to carefully tracking the sate of a component.
+
+<!--truncate-->
+
+## Why do we need state
+
+Consider the simple case where we have a button which increments a counter upon being pressed.
+Naively this may be implemented as
+
+```tsx showLineNumbers
+function NaiveButtonCounter() {
+  let count = 0
+
+  const incrementCounter = () => {
+    console.log(`Pre-increment: ${count}`)
+    count = count + 1;
+    console.log(`Post-increment: ${count}`)
+  }
+
+  return (
+      <>
+        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <p>Times pressed: {count}</p>
+      </>
+  );
+}
+```
+
+Looking into the console will show:
+
+```console
+Pre-increment: 0
+Post-increment: 1
+Pre-increment: 1
+Post-increment: 2
+Pre-increment: 2
+Post-increment: 3
+```
+
+However, the screen will always show the text `Times pressed: 0`.
+This is because the variable `count` is not a state, and hence the component is not rerendered when its value is updated.
+
+## useState
+
+The `useState` hook allows state to be added to functional components.
+This state will be maintained between each render of the component, as well as causing rerender upon changing values.
+
+```tsx showLineNumbers
+import { useState } from "react";
+
+function ButtonCounter() {
+  const [count, setCount] = useState<number>(0);
+  /*    ☝️
+  *     Notice the destructuring assignment
+  */
+
+  const incrementCounter = () => {
+    console.log(`Pre-increment: ${count}`)
+    setCount(count + 1);
+    console.log(`Post-increment: ${count}`)
+  }
+
+  return (
+      <>
+        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <p>Times pressed: {count}</p>
+      </>
+  );
+}
+```
+
+Now looking into the console will show:
+
+```console
+Pre-increment: 0
+Post-increment: 0
+Pre-increment: 1
+Post-increment: 1
+Pre-increment: 2
+Post-increment: 2
+```
+
+However, now the screen should update the value shown in the text `Times pressed: ${count}` to be the actual number of times the button has been pressed.
+
+### When does rerendering happen
+
+The rerendering of the component will only occur after the function it is called within is complete.
+More specifically, the `setCount` call is batched and the value of the `count` state is only updated after the `incrementCount` function completes. Hence, the `console.log('Post-increment: ${count}')` appears to use the previous count value.
+
+Once the state value is updated, the component is rerendered, executing the body of the function component again, and recreating the rendered HTML.
+But the state is unaffected, hence the value of `count` is maintained, and the function reference `setCount` remains unchanged.
+
+### Initialising the state
+
+The `useState` method is generic, allowing for any valid type to be used.
+
+There are two methods for initialising the state. Regardless of the approach, the state that is returned will be equal to the initial value.
+
+The first approach is to provide the initial value directly to the `useState` hook call.
+This is appropriate when the initial value is known, for example knowing the counter will start from 0.
+
+```tsx showLineNumbers
+import {useState} from "react";
+
+function ButtonCounter() {
+  const [count, setCount] = useState<number>(0);
+  // ...
+}
+```
+
+The alternative is to provide a function which takes no arguments and returns the initial value.
+This is appropriate when the initial value must perform an intensive computation as this function is only called on the first render.
+
+Taking this approach avoids the recomputation of the initial value after the first render as it will no longer be required.
+
+```tsx showLineNumbers
+import {useState} from "react";
+
+function getInitialCount() {
+  let count = 0;
+  // Intensive computation
+  return count
+}
+
+function ButtonCounter() {
+  /* 💣 Do not do this */
+  // const initialValue = getInitialCount()
+  // const [count, setCount] = useState<number>(initialValue);
+
+  const [count, setCount] = useState<number>(() => getInitialCount());
+  // ...
+}
+```
+
+### setState
+
+The useState hook returns an array that is two elements long, the first being the initial value, and the second being a function to set the state, e.g.
+
+```ts
+const [state: T, setState: (prev: T) => T] = useState<T>(initialValue: T | getInitialValue: () => T);
+```
+
+The `setState` function can be provided the value for the next state, or a function which takes the previous state and returns the next state.
+This means the component can also be written.
+
+```tsx showLineNumbers
+import { useState } from "react";
+
+function ButtonCounter() {
+  const [count, setCount] = useState<number>(0);
+
+  const incrementCounter = () => {
+    console.log(`Pre-increment: ${count}`)
+    setCount(c => c + 1);
+    console.log(`Post-increment: ${count}`)
+  }
+
+  return (
+      <>
+        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <p>Times pressed: {count}</p>
+      </>
+  );
+}
+```
+
+
+
+
