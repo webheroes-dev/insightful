@@ -150,6 +150,7 @@ const [state: T, setState: (prev: T) => T] = useState<T>(initialValue: T | getIn
 ```
 
 The `setState` function can be provided the value for the next state, or a function which takes the previous state and returns the next state.
+If setting the state uses the previous state, then you should be providing a function to avoid any synchronisation errors.
 This means the component can also be written.
 
 ```tsx showLineNumbers
@@ -159,9 +160,7 @@ function ButtonCounter() {
   const [count, setCount] = useState<number>(0);
 
   const incrementCounter = () => {
-    console.log(`Pre-increment: ${count}`)
     setCount(c => c + 1);
-    console.log(`Post-increment: ${count}`)
   }
 
   return (
@@ -173,6 +172,94 @@ function ButtonCounter() {
 }
 ```
 
+## useEffect
+
+The `useEffect` hook allows side effects to be performed within functional components.
+This removes the requirement for developers to write asynchronous code.
+In particular, there are three main variations that are commonly seen.
+
+### Return value
+
+Returning a function within the `useEffect` function is done to do any cleanup jobs required when the component is unmounted.
+For example, this can be useful to remove any usage of the browser memory that the component has used.
+
+```tsx showLineNumbers
+//TODO: example
+```
+
+### Dependencies
+
+`useEffect` takes two arguments, the second of which is an optional argument that states each dependency of the hook.
+When any value of the dependencies changes, the function provided in the first argument is executed.
+
+### No dependency array
+
+Providing no dependency array leads to the `useEffect`'s second argument leads to the function being executed on every render of the component.
+
+```tsx showLineNumbers
+//TODO: example
+```
 
 
+WARNING: This can lead to infinite loops if not carefully designed, for example if a setState is called within the `useEffect` hook.
 
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Counter() {
+  const [count, setCount] = useState<number>(0);
+
+  useEffect(() => {
+    setCount(c => c + 1);
+  });
+
+  return (
+      <p>Count: {count}</p>
+  );
+};
+```
+
+Running this example shows the count increasing constantly, with no way to stop it!
+
+### Empty dependency array
+
+Providing an empty dependency array means the `useEffect` function is executed on the first render of the component only.
+
+This was seen in the previous article ***(TODO: LINK)*** where the event listener on the `hashchange` window event needs to be attached on the first render. In particular within the Next.js approaches.
+
+import HashSnippets from '../2023-10-26-that-is-not-a-state/snippet/hash/__tabs.mdx'
+
+<HashSnippets />
+
+In this example, the return value can be seen to remove the event listener which had been added to prevent any unexpected side effects.
+
+### Dependency array
+
+Providing variables/function references into the dependency array means the `useEffect` function is executed on the first render, and when any changes occur to the dependencies.
+This is commonly used to indicate that something must be rerun upon the changes to particular values.
+
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Counter() {
+    const [count, setCount] = useState<number>(0);
+  const [calculation, setCalculation] = useState<number>(0);
+
+  const incrementCounter = () => {
+    setCount(count + 1);
+  }
+
+  useEffect(() => {
+    console.log(`performing calculation on value ${count}`)
+    setCalculation(count * 2);
+    }, [count, setCalculation]);
+
+  return (
+      <>
+        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <p>Count: {count}</p>
+        <p>Calculation: {calculation}</p>
+      </>
+  );
+};
+```
