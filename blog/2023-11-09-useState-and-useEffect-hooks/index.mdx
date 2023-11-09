@@ -28,14 +28,14 @@ function NaiveButtonCounter() {
 
   return (
       <>
-        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <button type='button' onClick={() => incrementCounter()}>Click me to increase counter!</button>
         <p>Times pressed: {count}</p>
       </>
   );
 }
 ```
 
-Looking into the console will show:
+Looking into the console after pressing the button three times will show:
 
 ```console
 Pre-increment: 0
@@ -47,18 +47,33 @@ Post-increment: 3
 ```
 
 However, the screen will always show the text `Times pressed: 0`.
-This is because the variable `count` is not a state, and hence the component is not rerendered when its value is updated.
+This is because the variable `count` is not tracked by React, and hence the component is not rerendered when its value is updated.
+To track a value changes, we instead need to make use of a state.
 
 ## useState
 
 The `useState` hook allows state to be added to functional components.
 This state will be maintained between each render of the component, as well as causing rerender upon changing values.
 
+:::note
+
+The `useState` hook returns an array of two elements.
+
+The first is the current state.
+
+The second is a function which takes the previous state and returns the next state.
+
+```ts
+const [state: T, setState: (prev: T) => T] = useState<T>(initialValue: T | getInitialValue: () => T);
+```
+
+:::
+
 ```tsx showLineNumbers
 import { useState } from "react";
 
 function ButtonCounter() {
-  const [count, setCount] = useState<number>(0);
+  const [count, setCount] = useState(0);
   /*    ☝️
   *     Notice the destructuring assignment
   */
@@ -71,14 +86,14 @@ function ButtonCounter() {
 
   return (
       <>
-        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <button type='button' onClick={() => incrementCounter()}>Click me to increase counter!</button>
         <p>Times pressed: {count}</p>
       </>
   );
 }
 ```
 
-Now looking into the console will show:
+Now looking into the console after three button presses will show:
 
 ```console
 Pre-increment: 0
@@ -101,7 +116,11 @@ But the state is unaffected, hence the value of `count` is maintained, and the f
 
 ### Initialising the state
 
+:::tip
+
 The `useState` method is generic, allowing for any valid type to be used.
+
+:::
 
 There are two methods for initialising the state. Regardless of the approach, the state that is returned will be equal to the initial value.
 
@@ -112,7 +131,7 @@ This is appropriate when the initial value is known, for example knowing the cou
 import {useState} from "react";
 
 function ButtonCounter() {
-  const [count, setCount] = useState<number>(0);
+  const [count, setCount] = useState(0);
   // ...
 }
 ```
@@ -134,9 +153,9 @@ function getInitialCount() {
 function ButtonCounter() {
   /* 💣 Do not do this */
   // const initialValue = getInitialCount()
-  // const [count, setCount] = useState<number>(initialValue);
+  // const [count, setCount] = useState(initialValue);
 
-  const [count, setCount] = useState<number>(() => getInitialCount());
+  const [count, setCount] = useState(() => getInitialCount());
   // ...
 }
 ```
@@ -144,10 +163,6 @@ function ButtonCounter() {
 ### setState
 
 The useState hook returns an array that is two elements long, the first being the initial value, and the second being a function to set the state, e.g.
-
-```ts
-const [state: T, setState: (prev: T) => T] = useState<T>(initialValue: T | getInitialValue: () => T);
-```
 
 The `setState` function can be provided the value for the next state, or a function which takes the previous state and returns the next state.
 If setting the state uses the previous state, then you should be providing a function to avoid any synchronisation errors.
@@ -157,7 +172,7 @@ This means the component can also be written.
 import { useState } from "react";
 
 function ButtonCounter() {
-  const [count, setCount] = useState<number>(0);
+  const [count, setCount] = useState(0);
 
   const incrementCounter = () => {
     setCount(c => c + 1);
@@ -165,27 +180,43 @@ function ButtonCounter() {
 
   return (
       <>
-        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <button type='button' onClick={() => incrementCounter()}>Click me to increase counter!</button>
         <p>Times pressed: {count}</p>
       </>
   );
 }
 ```
 
+This is also essential if a single function calls the `setState` function multiple times.
+
+```tsx showLineNumbers
+import { useState } from "react";
+
+function ButtonCounter() {
+  const [count, setCount] = useState(1);
+
+  const incrementCounter = () => {
+    for (let i = 0; i < count; i++) {
+      setCount(c => c + 1);
+    }
+  }
+
+  return (
+      <>
+        <button type='button' onClick={() => incrementCounter()}>Click me to increase counter by {count}!</button>
+        <p>Times pressed: {count}</p>
+      </>
+  );
+}
+```
+
+If line 8 had instead been `setCount(count + 1)`, then the counter would only increase by 1 on each button press.
+
 ## useEffect
 
 The `useEffect` hook allows side effects to be performed within functional components.
 This removes the requirement for developers to write asynchronous code.
 In particular, there are three main variations that are commonly seen.
-
-### Return value
-
-Returning a function within the `useEffect` function is done to do any cleanup jobs required when the component is unmounted.
-For example, this can be useful to remove any usage of the browser memory that the component has used.
-
-```tsx showLineNumbers
-//TODO: example
-```
 
 ### Dependencies
 
@@ -200,14 +231,13 @@ Providing no dependency array leads to the `useEffect`'s second argument leads t
 //TODO: example
 ```
 
-
 WARNING: This can lead to infinite loops if not carefully designed, for example if a setState is called within the `useEffect` hook.
 
 ```tsx showLineNumbers
 import { useState, useEffect } from "react";
 
 function Counter() {
-  const [count, setCount] = useState<number>(0);
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
     setCount(c => c + 1);
@@ -242,8 +272,8 @@ This is commonly used to indicate that something must be rerun upon the changes 
 import { useState, useEffect } from "react";
 
 function Counter() {
-    const [count, setCount] = useState<number>(0);
-  const [calculation, setCalculation] = useState<number>(0);
+    const [count, setCount] = useState(0);
+  const [calculation, setCalculation] = useState(0);
 
   const incrementCounter = () => {
     setCount(count + 1);
@@ -256,10 +286,19 @@ function Counter() {
 
   return (
       <>
-        <button onClick={() => incrementCounter()}>Click me to increase counter!</button>
+        <button type='button' onClick={() => incrementCounter()}>Click me to increase counter!</button>
         <p>Count: {count}</p>
         <p>Calculation: {calculation}</p>
       </>
   );
 };
+```
+
+### Return value
+
+Returning a function within the `useEffect` function is done to do any cleanup jobs required when the component is unmounted.
+For example, this can be useful to remove any usage of the browser memory that the component has used.
+
+```tsx showLineNumbers
+//TODO: example
 ```
