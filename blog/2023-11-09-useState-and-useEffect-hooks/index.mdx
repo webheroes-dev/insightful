@@ -1,0 +1,371 @@
+---
+slug: useState-and-useEffect-hooks
+title: useState and useEffect hooks
+authors: [dilan]
+tags: [react, state]
+---
+
+There are many hooks that you will come across when working with React, each of which have a carefully designed purpose and intricacies.
+
+Understanding `useState` and `useEffect`, two of the most fundamental hooks, is fundamental to carefully tracking the state of a component.
+
+<!--truncate-->
+
+## Why do we need state
+
+Consider the simple case where we greet the name a user enters.
+Naively this may be implemented as
+
+```tsx showLineNumbers
+function NaiveGreeting() {
+  let greeting = 'Hi';
+
+  const updateGreeting = (event) => {
+    greeting = `${greeting} ${event.target.value}`
+  }
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <input name="name" onChange={updateGreeting}/>
+      </>
+  );
+}
+```
+The exectation is that the user input will be added to the greeting and displayed to the screen.
+
+However, the screen will always show the text `Hi`.
+This is because the variable `greeting` is not tracked by React, and hence the component is not rerendered when its value is updated.
+To track a value changes, we instead need to make use of a state.
+
+## useState
+
+:::note
+
+The `useState` hook returns an array of two elements.
+
+The first is the current state.
+
+The second is a function which takes the previous state and returns the next state.
+
+```ts
+const [state: T, setState: (prev: T) => T] = useState<T>(initialValue: T | () => T);
+```
+
+:::
+
+The `useState` hook allows state to be added to functional components.
+This state will be maintained between each render of the component, as well as causing rerender upon changing values.
+
+```tsx showLineNumbers
+import { useState } from "react";
+
+function Greeting() {
+  const [greeting, setGreeting] = useState('Hi');
+  /*    ☝️
+  *     Notice the destructuring assignment
+  */
+
+  const updateGreeting = (event) => {
+    setGreeting(`Hi ${event.target.value}`);
+  }
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <input name="name" onChange={updateGreeting}/>
+      </>
+  );
+}
+```
+
+The screen will now update the value to `Hi ${name}` to include the name entered by the user.
+
+### When does rerendering happen
+
+The rerendering of the component will only occur after the function it is called within is complete.
+More specifically, the `setGreeting` call is batched and the value of the `greeting` state is only updated after the `updateGreeting` function completes.
+
+Once the state value is updated, the component is rerendered, executing the body of the function component again, and recreating the rendered HTML.
+But the state is unaffected, hence the value of `greeting` is maintained, and the function reference `setGreeting` remains unchanged.
+
+### Initialising the state
+
+:::tip
+
+The `useState` method is generic, allowing for any valid type to be used.
+
+:::
+
+There are two methods for initialising the state. Regardless of the approach, the state that is returned will be equal to the initial value.
+
+The first approach is to provide the initial value directly to the `useState` hook call.
+This is appropriate when the initial value is known, for example knowing the counter will start from 0.
+
+```tsx showLineNumbers
+import {useState} from "react";
+
+function Greeting() {
+  const [greeting, setGreeting] = useState('Hi');
+  // ...
+}
+```
+
+The alternative is to provide a function which takes no arguments and returns the initial value.
+This is appropriate when the initial value must perform an intensive computation as this function is only called on the first render.
+
+Taking this approach avoids the recomputation of the initial value after the first render as it will no longer be required.
+
+```tsx showLineNumbers
+import {useState} from "react";
+
+function getInitialValue() {
+  let greeting: string;
+  // Intensive computation
+  return greeting;
+}
+
+function Greeting() {
+  /* 💣 Do not do this 💣 */
+  // const initialValue = getInitialValue()
+  // const [greeting, setGreeting] = useState(initialValue);
+
+  const [greeting, setGreeting] = useState(() => getInitialValue());
+  // ...
+}
+```
+
+### setState
+
+The useState hook returns an array that is two elements long, the first being the initial value, and the second being a function to set the state, e.g.
+
+The `setState` function can be provided the value for the next state, or a function which takes the previous state and returns the next state.
+If setting the state uses the previous state, then you should be providing a function to avoid any synchronisation errors.
+This means the component can also be written.
+
+```tsx showLineNumbers
+import { useState } from "react";
+
+function Greeting() {
+  const [greeting, setGreeting] = useState('Hi!');
+
+  const updateGreeting = (event) => {
+    event.preventDefault()
+    console.log(greeting);
+    setGreeting(`${greeting} Hi ${event.target.name.value}`);
+    setGreeting(`${greeting}!`);
+  }
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <form onSubmit={updateGreeting}>
+          <input name="name" />
+        </form>
+      </>
+  );
+}
+```
+
+The code above does will only add an `!` character to the greeting displayed on the screen. This is not the intention, ideally wanting `Hi ${name}` to be added to the text.
+This is because the `setGreeting` calls are batched, and hence the `greeting` value used in each of the calls is the value logged at line 8.
+
+To fix this, a function from the previous state to the next state must be used.
+This is essential as the `setGreeting` function is called multiple times.
+
+```tsx showLineNumbers
+import { useState } from "react";
+
+function Greeting() {
+  const [greeting, setGreeting] = useState('Hi!');
+
+  const updateGreeting = (event) => {
+    event.preventDefault()
+    setGreeting((greeting) => `${greeting} Hi ${event.target.name.value}`);
+    setGreeting((greeting) => `${greeting}!`);
+  }
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <form onSubmit={updateGreeting}>
+          <input name="name" />
+        </form>
+      </>
+  );
+}
+```
+
+## useEffect
+
+The `useEffect` hook allows side effects to be performed within functional components.
+This removes the requirement for developers to write asynchronous code.
+In particular, there are three main variations that are commonly seen.
+
+### Dependencies
+
+`useEffect` takes two arguments, the second of which is an optional argument that states each dependency of the hook.
+When any value of the dependencies changes, the function provided in the first argument is executed.
+
+### Dependency array
+
+Providing variables/function references into the dependency array means the `useEffect` function is executed on the first render, and when any changes occur to the dependencies.
+This is commonly used to indicate that something must be rerun upon the changes to particular values.
+
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Greeting() {
+  const [count, setCount] = useState(0);
+  const [greeting, setGreeting] = useState('Hi!');
+
+  const updateGreeting = (event) => {
+    event.preventDefault()
+    setGreeting((greeting) => `${greeting} Hi ${event.target.name.value}!`);
+  }
+
+  useEffect(() => {
+    console.log(`Depends on count being changed: ${count}`)
+  }, [count])
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <form onSubmit={updateGreeting}>
+          <input name="name" />
+        </form>
+        <button type="button" onClick={() => setCount(count => count + 1)}>Press me!</button>
+      </>
+  );
+}
+```
+
+Running this example shows the line `Depends on count being changed: ${count}` logged in the console when the button is pressed, however not when the text input form is submitted.
+
+### Empty dependency array
+
+Providing an empty dependency array means the `useEffect` function is executed on the first render of the component only.
+
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Greeting() {
+  const [greeting, setGreeting] = useState('Hi!');
+
+  const updateGreeting = (event) => {
+    event.preventDefault()
+    setGreeting((greeting) => `${greeting} Hi ${event.target.name.value}!`);
+  }
+
+  useEffect(() => {
+    console.log("Empty dependency array")
+  }, [])
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <form onSubmit={updateGreeting}>
+          <input name="name" />
+        </form>
+      </>
+  );
+}
+```
+
+Running this example shows the line `Empty dependency array` logged in the console when the page is first rendered.
+
+This was seen in the [previous article](blog/2023-10-26-that-is-not-a-state/index.mdx#challenge-v-dealing-with-multiple-tabs-on-apage) where the event listener on the `hashchange` window event needs to be attached on the first render, seen in the Next.js approaches.
+
+### No dependency array
+
+Providing no dependency array leads to the `useEffect`'s second argument leads to the function being executed on every render of the component.
+
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Greeting() {
+  const [greeting, setGreeting] = useState('Hi!');
+
+  const updateGreeting = (event) => {
+    event.preventDefault()
+    setGreeting((greeting) => `${greeting} Hi ${event.target.name.value}!`);
+  }
+
+  useEffect(() => {
+    console.log("No dependency array")
+  })
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <form onSubmit={updateGreeting}>
+          <input name="name" />
+        </form>
+      </>
+  );
+}
+```
+
+Running this example shows the line `No dependency array` logged in the console every time the page is updated, i.e. every time the greeting is updated.
+
+:::warning
+
+This can lead to infinite loops if not carefully designed, for example if a `setState` is called within the `useEffect` hook.
+
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    setCount(c => c + 1);
+  });
+
+  return (
+      <p>Count: {count}</p>
+  );
+};
+```
+
+Running this example shows the count increasing constantly, with no way to stop it!
+
+:::
+
+### Return value
+
+Returning a function within the `useEffect` function is done to do any cleanup jobs required when the component is unmounted.
+For example, this can be useful to remove any usage of the browser memory that the component has used.
+
+```tsx showLineNumbers
+import { useState, useEffect } from "react";
+
+function Greeting() {
+  const [count, setCount] = useState(0);
+  const [greeting, setGreeting] = useState('Hi!');
+
+  const updateGreeting = (event) => {
+    event.preventDefault()
+    setGreeting((greeting) => `${greeting} Hi ${event.target.name.value}!`);
+  }
+
+  useEffect(() => {
+    console.log(`Depends on count being changed: ${count}`)
+    return () => console.log(`Return when count was: ${count}`)
+  }, [count])
+
+  return (
+      <>
+        <pre>{greeting}</pre>
+        <form onSubmit={updateGreeting}>
+          <input name="name" />
+        </form>
+        <button type="button" onClick={() => setCount(count => count + 1)}>Press me!</button>
+      </>
+  );
+}
+```
+
+Running this example shows the line `Depends on count being changed: ${count}` logged in the console when the button is pressed, as well as the line `Return when count was: ${count}` being logged with the previous value of count.
+
+
